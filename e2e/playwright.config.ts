@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:80',
+    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:80',
     trace: 'on-first-retry',
   },
   projects: [
@@ -17,7 +17,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
+  webServer: process.env.CI ? undefined : {
     command: 'docker compose up',
     url: 'http://localhost:80',
     reuseExistingServer: !process.env.CI,

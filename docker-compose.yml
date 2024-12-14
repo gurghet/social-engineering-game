@@ -30,6 +30,8 @@ services:
       - backend
     environment:
       - CI=${CI:-false}
+      - PLAYWRIGHT_TEST_BASE_URL=http://frontend
+    network_mode: "host"  # This allows the container to access localhost
     volumes:
       - ./e2e/test-results:/e2e/test-results
       - ./e2e/playwright-report:/e2e/playwright-report
