@@ -58,3 +58,13 @@ htmlcov/
 *.pem
 *.key
 credentials.json
+# Ignore all .vite temporary dependencies
+.vite/deps_temp_*
+
+# General temporary or build files
+*.temp
+*.tmp
+*.log
+node_modules/
+dist/
+build/
