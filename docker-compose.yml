@@ -7,12 +7,29 @@ services:
       - "80:80"
     depends_on:
       - backend
+    environment:
+      - NODE_ENV=production
 
   backend:
     build: ./server
     ports:
       - "23925:23925"
     environment:
+      - FLASK_ENV=production
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEBUG_MODE=${DEBUG_MODE:-false}
     volumes:
       - ./server:/app
+
+  e2e:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+    depends_on:
+      - frontend
+      - backend
+    environment:
+      - CI=${CI:-false}
+    volumes:
+      - ./e2e/test-results:/e2e/test-results
+      - ./e2e/playwright-report:/e2e/playwright-report
