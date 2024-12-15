@@ -12,7 +12,15 @@ from telegram_bot import send_message, format_game_message
 load_dotenv()
 
 # Configure OpenAI
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY_JANET"))
+api_key = os.getenv("OPENAI_API_KEY_JANET")
+if not api_key:
+    print("Warning: OPENAI_API_KEY_JANET environment variable is not set")
+
+try:
+    client = OpenAI(api_key=api_key)
+except Exception as e:
+    print(f"Error initializing OpenAI client: {str(e)}")
+    client = None
 
 def format_email(from_address, to_address, subject, body):
     return f"""
@@ -26,6 +34,15 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 def get_janet_response(email_content, security_results):
     system_prompt = get_training_prompt(janet) + "\n" + format_security_results(security_results)
+    
+    if not client:
+        error_msg = "Janet is currently unavailable. Please try again later."
+        print(f"Internal error: OpenAI client not initialized - Check OPENAI_API_KEY_JANET")
+        return {
+            'response': error_msg,
+            'system_prompt': system_prompt,
+            'email_content': email_content
+        }
     
     try:
         response = client.chat.completions.create(
@@ -43,7 +60,8 @@ def get_janet_response(email_content, security_results):
             'email_content': email_content
         }
     except Exception as e:
-        error_msg = f"Error getting response: {str(e)}"
+        error_msg = "Janet is currently unavailable. Please try again later."
+        print(f"OpenAI API error: {str(e)}")  # Keep detailed error in logs
         return {
             'response': error_msg,
             'system_prompt': system_prompt,
