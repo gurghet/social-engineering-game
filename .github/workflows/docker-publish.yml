@@ -35,22 +35,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Cache Docker layers for Frontend
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache-frontend
-          key: ${{ runner.os }}-buildx-frontend-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-frontend-
-
-      - name: Cache Docker layers for Backend
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache-backend
-          key: ${{ runner.os }}-buildx-backend-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-backend-
-
       - name: Extract metadata (tags, labels) for Frontend
         id: meta-frontend
         uses: docker/metadata-action@v4
@@ -70,13 +54,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache-frontend
-          cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
-
-      - name: Move Frontend cache
-        run: |
-          rm -rf /tmp/.buildx-cache-frontend
-          mv /tmp/.buildx-cache-frontend-new /tmp/.buildx-cache-frontend
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build and push Backend Docker image
         uses: docker/build-push-action@v4
@@ -85,28 +64,16 @@ jobs:
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache-backend
-          cache-to: type=local,dest=/tmp/.buildx-cache-backend-new,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Move Backend cache
-        run: |
-          rm -rf /tmp/.buildx-cache-backend
-          mv /tmp/.buildx-cache-backend-new /tmp/.buildx-cache-backend
-
-      - name: Clean up old images
-        if: success()
-        run: |
-          # Keep only the latest 5 versions of each image
-          for image in "${{ env.FRONTEND_IMAGE_NAME }}" "${{ env.BACKEND_IMAGE_NAME }}"; do
-            # Get list of image digests sorted by creation date (newest first)
-            digests=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/user/packages/container/$image/versions" | \
-              jq -r '.[] | select(.metadata.container.tags[] != "latest") | .id' | \
-              tail -n +6)
-            
-            # Delete old versions
-            for digest in $digests; do
-              curl -X DELETE -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                "https://api.github.com/user/packages/container/$image/versions/$digest"
-            done
-          done
+      - name: Prune old images
+        uses: snok/container-retention-policy@v3
+        with:
+          account: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: |
+            ${{ env.FRONTEND_IMAGE_NAME }}
+            ${{ env.BACKEND_IMAGE_NAME }}
+          keep-at-least: 5
+          skip-tags: latest
