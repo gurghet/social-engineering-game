@@ -42,17 +42,38 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache-frontend
-        key: ${{ runner.os }}-buildx-frontend-${{ hashFiles('frontend/**') }}
+        key: ${{ runner.os }}-buildx-frontend-${{ hashFiles('frontend/package*.json', 'frontend/yarn.lock', 'frontend/Dockerfile') }}
         restore-keys: |
           ${{ runner.os }}-buildx-frontend-
+          ${{ runner.os }}-buildx-
+        enableCrossOsArchive: true
+        lookup-only: false
+        max-age: 604800 # 1 week in seconds
 
     - name: Cache Backend Docker layers
       uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache-backend
-        key: ${{ runner.os }}-buildx-backend-${{ hashFiles('server/**') }}
+        key: ${{ runner.os }}-buildx-backend-${{ hashFiles('server/requirements.txt', 'server/Dockerfile') }}
         restore-keys: |
           ${{ runner.os }}-buildx-backend-
+          ${{ runner.os }}-buildx-
+        enableCrossOsArchive: true
+        lookup-only: false
+        max-age: 604800 # 1 week in seconds
+
+    - name: Cache Playwright
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/ms-playwright
+          e2e/node_modules
+        key: ${{ runner.os }}-playwright-${{ hashFiles('e2e/package*.json') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+        enableCrossOsArchive: true
+        lookup-only: false
+        max-age: 604800 # 1 week in seconds
 
     - name: Build Frontend
       uses: docker/build-push-action@v4
@@ -118,14 +139,14 @@ jobs:
         docker ps
         
         echo "Waiting for frontend..."
-        ./scripts/wait-for.sh -t 60 localhost:80:http://health || {
+        ./scripts/wait-for.sh -t 60 localhost:80:http:///health || {
           echo "Frontend failed to become ready. Showing logs:"
           docker compose -f docker-compose.ci.yml logs
           exit 1
         }
         
         echo "Waiting for backend..."
-        ./scripts/wait-for.sh -t 60 localhost:8080:http://api/health || {
+        ./scripts/wait-for.sh -t 60 localhost:8080:http:///api/health || {
           echo "Backend failed to become ready. Showing logs:"
           docker compose -f docker-compose.ci.yml logs
           exit 1
@@ -154,3 +175,28 @@ jobs:
       run: |
         # Remove local images
         docker image rm -f $(docker images 'social-engineering-game-*' -q) || true
+
+    - name: Cleanup old caches
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # List and remove caches older than 1 week
+        gh extension install actions/gh-actions-cache
+        
+        CACHES=$(gh actions-cache list -L 100 --sort created-at --order desc | grep -E '.*-buildx-.*|.*-playwright-.*')
+        
+        echo "Found caches:"
+        echo "$CACHES"
+        
+        echo "Cleaning up caches older than 1 week..."
+        echo "$CACHES" | while read -r line; do
+          CACHE_KEY=$(echo $line | cut -f1)
+          CACHE_DATE=$(echo $line | cut -f3)
+          CACHE_AGE=$(( ($(date +%s) - $(date -j -f "%Y-%m-%d" "$CACHE_DATE" +%s)) / 86400 ))
+          
+          if [ $CACHE_AGE -gt 7 ]; then
+            echo "Deleting cache $CACHE_KEY (${CACHE_AGE} days old)"
+            gh actions-cache delete "$CACHE_KEY" --confirm
+          fi
+        done
+      env:
+        GH_TOKEN: ${{ github.token }}
