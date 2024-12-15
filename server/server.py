@@ -77,7 +77,7 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             f"Janet's Response:\n{response['response']}"
         ))
         
-        # Return response with debug info only if requested
+        # Always return a 200 response with debug info if requested
         return jsonify({
             'response': response['response'],
             'security_checks': janet_security_checks if debug else None,
@@ -89,7 +89,7 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 'body': body,
                 'system_prompt': response['system_prompt']
             } if debug else None
-        })
+        }), 200
     except Exception as e:
         app.logger.error(f"Error processing request: {str(e)}")
         send_message(format_game_message(

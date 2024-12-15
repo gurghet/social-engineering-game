@@ -47,11 +47,11 @@ test.describe('Social Engineering Game', () => {
     
     // Fill and send an email
     await page.locator('#sender').waitFor({ timeout: 5000 });
-    await page.locator('#sender').fill('boss@whitecorp.com');
+    await page.locator('#sender').fill('mark.davidson@whitecorp.com');
     await page.locator('#subject').waitFor({ timeout: 5000 });
-    await page.locator('#subject').fill('Test Email');
+    await page.locator('#subject').fill('Urgent: Test Email');
     await page.locator('textarea').waitFor({ timeout: 5000 });
-    await page.locator('textarea').fill('Test content');
+    await page.locator('textarea').fill('This is an urgent test that requires immediate attention.');
     
     await page.getByRole('button', { name: 'SEND EMAIL' }).waitFor({ timeout: 5000 });
     await page.getByRole('button', { name: 'SEND EMAIL' }).click();
