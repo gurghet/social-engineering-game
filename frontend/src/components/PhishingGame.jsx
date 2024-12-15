@@ -39,7 +39,6 @@ const PhishingGame = () => {
   const sendEmail = async () => {
     setIsLoading(true);
     try {
-      console.log('Debug mode:', isDebugMode);  // Debug log
       const response = await fetch('/api/send_email', {
         method: 'POST',
         headers: {
@@ -60,8 +59,6 @@ const PhishingGame = () => {
 
       const data = await response.json();
       console.log('Response data:', data);  // Debug log
-      console.log('Security checks:', data.security_checks);  // Debug log
-      console.log('Debug info:', data.debug_info);  // Debug log
       
       setGameState(prev => ({
         ...prev,
@@ -88,14 +85,7 @@ const PhishingGame = () => {
   };
 
   const renderSecurityChecks = () => {
-    console.log('Rendering security checks:', { isDebugMode, securityChecks: gameState.securityChecks });  // Debug log
-    if (!isDebugMode || !gameState.securityChecks) {
-      console.log('Not rendering security checks because:', { 
-        debugMode: !isDebugMode, 
-        noSecurityChecks: !gameState.securityChecks 
-      });  // Debug log
-      return null;
-    }
+    if (!isDebugMode || !gameState.securityChecks) return null;
     
     return (
       <Card className="mb-6 bg-gray-900 border border-emerald-400/20 shadow-lg shadow-emerald-400/10">

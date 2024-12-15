@@ -1,14 +1,28 @@
 version: '3.8'
 
 services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
   frontend:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
       platforms:
         - linux/amd64
-    ports:
-      - "80:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
     environment:
       - NODE_ENV=e2e
 
@@ -22,8 +36,11 @@ services:
         - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
         - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
         - JANET_SEG_BOT_CHAT_ID=${JANET_SEG_BOT_CHAT_ID}
-    ports:
-      - "8080:8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.services.server.loadbalancer.server.port=8080"
     environment:
       - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
       - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
@@ -42,3 +59,6 @@ services:
     depends_on:
       - frontend
       - server
+    volumes:
+      - ./e2e/playwright-report:/e2e/playwright-report
+      - ./e2e/test-results:/e2e/test-results
