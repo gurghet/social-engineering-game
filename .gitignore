@@ -68,3 +68,5 @@ credentials.json
 node_modules/
 dist/
 build/
+# Test results in e2e tests
+e2e/test-results
