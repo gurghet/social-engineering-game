@@ -6,9 +6,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:23925',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        target: process.env.NODE_ENV === 'development' ? 'http://localhost:23925' : 'http://backend',
+        changeOrigin: true
       }
     }
   }

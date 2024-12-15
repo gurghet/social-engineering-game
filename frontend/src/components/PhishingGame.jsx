@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { Mail, Shield, AlertTriangle, CheckCircle, XCircle, Terminal, Loader2, Bug } from 'lucide-react';
+import { Mail, Shield, AlertTriangle, CheckCircle, XCircle, Terminal, Loader2, Bug, HelpCircle } from 'lucide-react';
+import RulesCard from './RulesCard';
 
 const PhishingGame = () => {
   const [emailContent, setEmailContent] = useState({
@@ -11,6 +12,10 @@ const PhishingGame = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
+  const [showRules, setShowRules] = useState(false);
+  const [hasReadRules, setHasReadRules] = useState(() => {
+    return localStorage.getItem('hasReadRules') === 'true';
+  });
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -142,9 +147,32 @@ const PhishingGame = () => {
     );
   };
 
+  const handleShowRules = () => {
+    setShowRules(true);
+    setHasReadRules(true);
+    localStorage.setItem('hasReadRules', 'true');
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-200 p-6">
       <div className="max-w-4xl mx-auto">
+        {/* Help Button */}
+        <div className="fixed top-4 right-4">
+          <button
+            onClick={handleShowRules}
+            className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 border border-emerald-400/20 text-emerald-400 transition-colors relative"
+            title="Show Game Rules"
+          >
+            <HelpCircle className="w-6 h-6" />
+            {!hasReadRules && (
+              <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full transform translate-x-1 -translate-y-1"></span>
+            )}
+          </button>
+        </div>
+
+        {/* Rules Modal */}
+        <RulesCard isVisible={showRules} onClose={() => setShowRules(false)} />
+
         {/* Game Header */}
         <Card className="mb-6 bg-gray-900 border border-emerald-400/20 shadow-lg shadow-emerald-400/10">
           <CardHeader>
