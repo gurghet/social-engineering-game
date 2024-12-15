@@ -98,4 +98,5 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=23925)
+    port = int(os.environ.get('PORT', 23925))
+    app.run(debug=True, host='0.0.0.0', port=port)

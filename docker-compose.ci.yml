@@ -16,13 +16,20 @@ services:
       dockerfile: Dockerfile
       platforms:
         - linux/amd64
+      args:
+        - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
+        - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
+        - JANET_SEG_BOT_CHAT_ID=${JANET_SEG_BOT_CHAT_ID}
     ports:
       - "8080:8080"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY_JANET}
+      - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
       - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
       - JANET_SEG_BOT_CHAT_ID=${JANET_SEG_BOT_CHAT_ID}
-      - PORT=8080  # Make the server listen on port 8080 in CI
+      - FLASK_APP=server.py
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PORT=8080
 
   e2e:
     build:
