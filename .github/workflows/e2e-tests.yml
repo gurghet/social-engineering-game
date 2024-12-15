@@ -35,10 +35,31 @@ jobs:
 
     - name: Wait for services to be ready
       run: |
-        # Wait for frontend
-        timeout 60 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:80)" != "200" ]]; do sleep 5; done'
-        # Wait for backend
-        timeout 60 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:23925/api/health)" != "200" ]]; do sleep 5; done'
+        echo "Waiting for containers to start..."
+        docker ps
+        
+        echo "Giving containers time to initialize..."
+        sleep 10
+        
+        echo "Checking frontend health..."
+        ATTEMPT=1
+        MAX_ATTEMPTS=12
+        until $(curl --output /dev/null --silent --fail http://localhost:80) || [ $ATTEMPT -eq $MAX_ATTEMPTS ]; do
+          echo "Attempt $ATTEMPT of $MAX_ATTEMPTS: Frontend not ready yet..."
+          docker compose -f docker-compose.ci.yml logs frontend --tail 50
+          sleep 5
+          ATTEMPT=$(($ATTEMPT + 1))
+        done
+        
+        if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+          echo "Frontend failed to become ready. Showing logs:"
+          docker compose -f docker-compose.ci.yml logs
+          exit 1
+        fi
+        
+        echo "Frontend is ready!"
+        echo "Checking backend connectivity..."
+        curl -v http://localhost:23925/api/prompt
 
     - name: Run Playwright tests
       run: |
