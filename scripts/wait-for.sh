@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # wait-for.sh - Wait for a service to be ready
-# Usage: ./wait-for.sh [options] <host:port> [-- command args]
+# Usage: ./wait-for.sh [options] <host:port>[:http[s]:/path] [-- command args]
 #   -t TIMEOUT  Timeout in seconds, zero for no timeout, default: 60
 #   -s         Only execute subcommand if the test succeeds
 #   -- COMMAND ARGS   Execute command with args after the test finishes
 
 TIMEOUT=60
 QUIET=0
-PROTOCOL="tcp"
-HEALTH_CHECK=0
+PROTOCOL="http"
+HEALTH_CHECK=1
 HEALTH_PATH=""
 
 usage() {
@@ -36,26 +36,25 @@ wait_for() {
   WAIT_START=$(date +%s)
 
   while :; do
-    (echo -n > /dev/tcp/$wait_host/$wait_port) >/dev/null 2>&1
+    if [ -z "$health_path" ]; then
+      echo "Error: Health check path is required"
+      return 1
+    fi
+    
+    # Always do HTTP health check
+    HEALTH_URL="$protocol://$wait_host:$wait_port$health_path"
+    echo "Checking health endpoint: $HEALTH_URL"
+    curl --silent --fail "$HEALTH_URL" >/dev/null 2>&1
     result=$?
-    if [ $result -eq 0 ]; then
-      if [ -n "$health_path" ]; then
-        # If health check URL is provided, verify the endpoint
-        HEALTH_URL="$protocol://$wait_host:$wait_port$health_path"
-        echo "Checking health endpoint: $HEALTH_URL"
-        curl --silent --fail "$HEALTH_URL" >/dev/null 2>&1
-        result=$?
-      fi
       
-      if [ $result -eq 0 ]; then
-        if [ $QUIET -eq 0 ]; then
-          echo "Service at $wait_host:$wait_port is ready!"
-        fi
-        WAIT_END=$(date +%s)
-        WAIT_TIME=$((WAIT_END-WAIT_START))
-        echo "Waited for $WAIT_TIME seconds"
-        return 0
+    if [ $result -eq 0 ]; then
+      if [ $QUIET -eq 0 ]; then
+        echo "Service at $wait_host:$wait_port is ready!"
       fi
+      WAIT_END=$(date +%s)
+      WAIT_TIME=$((WAIT_END-WAIT_START))
+      echo "Waited for $WAIT_TIME seconds"
+      return 0
     fi
     
     NOW=$(date +%s)
