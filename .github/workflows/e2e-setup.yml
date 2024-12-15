@@ -12,16 +12,17 @@ on:
       OPENAI_API_KEY:
         required: true
 
+env:
+  DOCKER_BUILDKIT: 1
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  DEBUG_MODE: true
+  CI: true
+  DOCKER_DEFAULT_PLATFORM: ${{ inputs.platform }}
+
 jobs:
   setup-and-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      DEBUG_MODE: true
-      CI: true
-      DOCKER_DEFAULT_PLATFORM: ${{ inputs.platform }}
-
     steps:
     - uses: actions/checkout@v3
 
@@ -33,19 +34,76 @@ jobs:
       uses: docker/setup-buildx-action@v3
       with:
         buildkitd-flags: --debug
+        driver-opts: |
+          image=moby/buildkit:latest
+          network=host
+
+    - name: Cache Frontend Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache-frontend
+        key: ${{ runner.os }}-buildx-frontend-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-frontend-
+
+    - name: Cache Backend Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache-backend
+        key: ${{ runner.os }}-buildx-backend-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-backend-
+
+    - name: Build Frontend
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        load: true
+        tags: social-engineering-game-frontend:test
+        cache-from: type=local,src=/tmp/.buildx-cache-frontend
+        cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
+        build-args: |
+          VERSION=test
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+
+    - name: Move Frontend cache
+      run: |
+        rm -rf /tmp/.buildx-cache-frontend
+        mv /tmp/.buildx-cache-frontend-new /tmp/.buildx-cache-frontend
+
+    - name: Build Backend
+      uses: docker/build-push-action@v4
+      with:
+        context: ./server
+        load: true
+        tags: social-engineering-game-backend:test
+        cache-from: type=local,src=/tmp/.buildx-cache-backend
+        cache-to: type=local,dest=/tmp/.buildx-cache-backend-new,mode=max
+        build-args: |
+          VERSION=test
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+
+    - name: Move Backend cache
+      run: |
+        rm -rf /tmp/.buildx-cache-backend
+        mv /tmp/.buildx-cache-backend-new /tmp/.buildx-cache-backend
 
     - name: Enable BuildKit caching
       run: |
         echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
         echo "COMPOSE_DOCKER_CLI_BUILD=1" >> $GITHUB_ENV
+        echo "BUILDKIT_PROGRESS=plain" >> $GITHUB_ENV
 
     - name: Build containers
       env:
         DOCKER_BUILDKIT: 1
         COMPOSE_DOCKER_CLI_BUILD: 1
+        BUILDKIT_PROGRESS: plain
       run: |
+        # Build with BuildKit and export cache
         docker compose -f docker-compose.ci.yml build \
-          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+          --progress=plain
 
     - name: Start containers
       run: |
