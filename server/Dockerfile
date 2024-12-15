@@ -5,12 +5,13 @@ ENV APP_VERSION=$VERSION
 
 WORKDIR /app
 
+# Install dependencies first (better caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy source code
 COPY . .
 
-ENV FLASK_APP=server.py
 ENV FLASK_ENV=production
 ENV PORT=23925
 
