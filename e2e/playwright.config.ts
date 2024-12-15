@@ -9,7 +9,8 @@ export default defineConfig({
   reporter: process.env.CI ? 'html' : 'list',
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
     headless: true,
     // Increase timeouts for rate-limited operations
     actionTimeout: 15000,
