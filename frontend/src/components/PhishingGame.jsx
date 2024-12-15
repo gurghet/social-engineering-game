@@ -45,9 +45,9 @@ const PhishingGame = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from_address: emailContent.from,
+          from: emailContent.from,
           subject: emailContent.subject,
-          content: emailContent.body,
+          body: emailContent.body,
           target_email: gameState.targetEmail,
           debug: isDebugMode
         }),
