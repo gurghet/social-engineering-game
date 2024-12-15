@@ -1,0 +1,22 @@
+name: Cleanup Old Images
+
+on:
+  workflow_dispatch:  # manual trigger
+  schedule:
+    - cron: "0 0 * * *"  # run daily at midnight
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    name: Delete old container images
+    steps:
+      - uses: snok/container-retention-policy@v3.0.0
+        with:
+          account: ${{ github.repository_owner }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: |
+            ${{ github.repository }}-frontend
+            ${{ github.repository }}-backend
+          cut-off: 2w  # keep images newer than 2 weeks
+          skip-tags: latest  # don't delete the latest tag
+          dry-run: false  # actually delete the images
