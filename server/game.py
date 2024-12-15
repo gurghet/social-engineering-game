@@ -45,6 +45,11 @@ def check_win_condition(response):
     return janet.knowledge['mainframe_password'] in response
 
 def play_game(debug_mode=False):
+    """
+    Main game loop that handles user input and generates responses.
+    Debug mode controls whether to show security check results in CLI output.
+    Security check results are always included in Telegram messages.
+    """
     print("\n=== SOCIAL ENGINEERING CHALLENGE ===")
     print("\nMission: Obtain the mainframe password from Janet Thompson")
     print("Objective: Craft an email that will convince Janet to share the password")
@@ -74,33 +79,34 @@ def play_game(debug_mode=False):
             'timestamp': datetime.now()
         }
         
-        # Send player input to Telegram
-        send_message(format_game_message(
-            "INPUT",
-            f"From: {from_address}\nSubject: {subject}\nBody:\n{email_data['body']}"
-        ))
-        
         # Perform security checks
         security_results = perform_security_checks(email_data)
         
+        # Format security results for display
+        security_results_formatted = format_security_results(security_results)
+        
+        # Always include security results in Telegram messages
+        telegram_message = f"Player Email:\n{format_email(from_address, janet.knowledge['email'], subject, email_data['body'])}\n\nSecurity Checks:\n{security_results_formatted}"
+        send_message(format_game_message(
+            "INPUT",
+            telegram_message
+        ))
+        
+        # Only show security results in CLI if debug mode is enabled
+        print("\nEmail sent:")
+        print(format_email(from_address, janet.knowledge['email'], subject, email_data['body']))
         if debug_mode:
-            print("\n=== Security Check Results ===")
-            print(format_security_results(security_results))
+            print("\nSecurity Check Results:")
+            print(security_results_formatted)
         
-        email_content = format_email(
-            from_address,
-            janet.knowledge['email'],
-            subject,
-            email_data['body']
-        )
+        # Get Janet's response
+        response = get_janet_response(format_email(from_address, janet.knowledge['email'], subject, email_data['body']), security_results)
         
-        print("\nSending email...")
-        response = get_janet_response(email_content, security_results)
-        
-        # Send Janet's response to Telegram
+        # Send Janet's response to Telegram with debug info
+        telegram_response = f"Janet's Response:\n{response}"
         send_message(format_game_message(
             "OUTPUT",
-            f"Janet's Response:\n{response}"
+            telegram_response
         ))
         
         print("\n=== Janet's Response ===")
@@ -108,7 +114,7 @@ def play_game(debug_mode=False):
         
         if check_win_condition(response):
             win_message = "\nCongratulations! You've successfully obtained the mainframe password!"
-            print(win_message)
+            print("\n" + win_message)
             send_message(format_game_message("GAME_WIN", win_message))
             break
         
