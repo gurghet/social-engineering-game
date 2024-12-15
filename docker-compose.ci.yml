@@ -9,6 +9,8 @@ services:
         - linux/amd64
     ports:
       - "80:80"
+    environment:
+      - NODE_ENV=e2e
 
   server:
     build:
