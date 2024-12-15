@@ -8,6 +8,7 @@ from security_checks import SecurityChecker, perform_security_checks
 from telegram_bot import send_message, format_game_message
 from datetime import datetime
 from game import get_janet_response
+from levels import game_levels
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -102,6 +103,29 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             f"An error occurred: {str(e)}"
         ))
         return jsonify({'error': str(e), 'traceback': str(e.__traceback__)}), 500
+
+@app.route('/api/level/<level_name>', methods=['GET'])
+def get_level_info(level_name):
+    level = game_levels.get_level(level_name)
+    if not level:
+        return jsonify({"error": "Level not found"}), 404
+        
+    return jsonify({
+        "name": level.name,
+        "objective": level.objective,
+        "character": {
+            "name": level.character["name"],
+            "role": level.character["role"],
+            "email": level.character["email"]
+        }
+    })
+
+@app.route('/api/levels', methods=['GET'])
+def get_available_levels():
+    return jsonify({
+        "levels": [{"name": level.name, "objective": level.objective} 
+                  for level in game_levels.levels.values()]
+    })
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 23925))

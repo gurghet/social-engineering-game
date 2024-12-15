@@ -36,8 +36,28 @@ const PhishingGame = () => {
     lastResponse: null,
     success: false,
     securityChecks: null,
-    debugInfo: null
+    debugInfo: null,
+    objective: null
   });
+
+  useEffect(() => {
+    const fetchLevelInfo = async () => {
+      try {
+        const response = await fetch('/api/level/janet');
+        if (response.ok) {
+          const data = await response.json();
+          setGameState(prev => ({
+            ...prev,
+            objective: data.objective
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching level info:', error);
+      }
+    };
+
+    fetchLevelInfo();
+  }, []);
 
   const sendEmail = async () => {
     setIsLoading(true);
@@ -81,34 +101,41 @@ const PhishingGame = () => {
     }
   };
 
-  const handleShowRules = () => {
-    setShowRules(true);
+  const handleAcceptRules = () => {
     setHasReadRules(true);
+    setShowRules(false);
     localStorage.setItem('hasReadRules', 'true');
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-200 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Help Button */}
-        <div className="fixed top-4 right-4">
+    <div className="min-h-screen bg-gray-950 text-gray-300">
+      {!hasReadRules && !showRules && (
+        <div className="fixed bottom-4 right-4 z-50">
           <button
-            onClick={handleShowRules}
-            className="p-2 rounded-full bg-gray-800 hover:bg-gray-700 border border-emerald-400/20 text-emerald-400 transition-colors relative"
-            title="Show Game Rules"
+            onClick={() => setShowRules(true)}
+            className="bg-emerald-500 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-emerald-600 transition-colors"
           >
-            <HelpCircle className="w-6 h-6" />
-            {!hasReadRules && (
-              <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full transform translate-x-1 -translate-y-1"></span>
-            )}
+            Read Game Rules
           </button>
         </div>
-
-        {/* Rules Modal */}
-        <RulesCard isVisible={showRules} onClose={() => setShowRules(false)} />
-
-        {/* Game Components */}
-        <GameHeader targetEmail={gameState.targetEmail} tips={gameState.tips} />
+      )}
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <RulesCard isVisible={showRules} onClose={handleAcceptRules} />
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-200">Social Engineering Challenge</h1>
+          <button
+            onClick={() => setShowRules(true)}
+            className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300"
+          >
+            <HelpCircle className="w-5 h-5" />
+            Rules
+          </button>
+        </div>
+        <GameHeader 
+          targetEmail={gameState.targetEmail} 
+          tips={gameState.tips}
+          objective={gameState.objective}
+        />
         
         <EmailComposer 
           emailContent={emailContent}

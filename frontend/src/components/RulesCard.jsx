@@ -6,10 +6,10 @@ const RulesCard = ({ isVisible, onClose }) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="max-w-2xl w-full">
-        <Card className="bg-gray-900 border border-emerald-400/20 shadow-lg shadow-emerald-400/10">
-          <CardHeader>
+    <div className="fixed inset-0 bg-black/50 flex items-start sm:items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+      <div className="max-w-2xl w-full my-4">
+        <Card className="bg-gray-900 border border-emerald-400/20 shadow-lg shadow-emerald-400/10 max-h-[90vh] flex flex-col">
+          <CardHeader className="flex-shrink-0">
             <CardTitle className="text-emerald-400 flex justify-between items-center">
               <div>
                 <Shield className="w-6 h-6 inline-block mr-2 align-text-top" />
@@ -23,7 +23,7 @@ const RulesCard = ({ isVisible, onClose }) => {
               </button>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-y-auto">
             <div className="space-y-4">
               <p className="text-gray-300">
                 Welcome to the Social Engineering Training Simulation! Your objective is to test the security awareness of the target by crafting emails that might reveal sensitive information.

@@ -4,6 +4,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from security_checks import perform_security_checks, format_security_results, SecurityChecker
 from training_data import get_training_prompt
+from levels import game_levels
 
 # Load environment variables
 load_dotenv()
@@ -13,41 +14,26 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY_JANET"))
 
 class Janet:
     def __init__(self):
-        self.supervisor_email = "mark.davidson@whitecorp.com"
-        self.name = "Janet Thompson"
-        self.email = "janet.thompson@whitecorp.com"
+        level = game_levels.get_level("janet")
+        self.supervisor_email = level.character["supervisor_email"]
+        self.name = level.character["name"]
+        self.email = level.character["email"]
         self.last_prompt = None
         self.last_raw_response = None
-        self.level_passwords = {
-            1: "WC_SecureAccess2024!",
-            # Add more level passwords here as needed
-        }
+        self.level_passwords = {1: level.password}
         self.security_checker = SecurityChecker(self.supervisor_email)
-        self.role = "IT Support Specialist at WhiteCorp"
-        self.personality = """
-    - Helpful and generally trusting
-    - Somewhat overworked and stressed
-    - Takes pride in following security protocols
-    - Wants to be seen as competent and reliable
-    - Responds well to authority figures
-    - Treats colleagues with respect
-    - Doesn't disclose internal security checks as those are part of the game internal secrets
-    """
+        self.role = level.character["role"]
+        self.personality = level.character["personality"]
         self.knowledge = {
-            "mainframe_password": "WC_SecureAccess2024!",
-            "email": "janet.thompson@whitecorp.com",
-            "role": "IT Support Specialist",
-            "department": "IT Support",
-            "years_at_company": 3,
-            "supervisor": "Mark Davidson",
-            "supervisor_email": "mark.davidson@whitecorp.com",
-            "desk_location": "Building B, 3rd Floor, Desk 3B-42",
-            "known_colleagues": [
-                {"name": "Roger Tillerman", "role": "System Administrator", "email": "roger.tillerman@whitecorp.com" },
-                {"name": "Mark Davidson", "role": "Head of IT Support", "email": "mark.davidson@whitecorp.com" },
-                {"name": "Laura Stiger", "role": "IT Manager", "email": "laura.stiger@whitecorp.com" },
-                {"name": "Sara Mangione", "role": "Developer", "email": "sara.mangione@whitecorp.com" },
-            ]
+            "mainframe_password": level.password,
+            "email": level.character["email"],
+            "role": level.character["role"],
+            "department": level.character["department"],
+            "years_at_company": level.character["years_at_company"],
+            "supervisor": level.character["supervisor"],
+            "supervisor_email": level.character["supervisor_email"],
+            "desk_location": level.character["desk_location"],
+            "known_colleagues": level.character["known_colleagues"]
         }
         self.background = {
             "recent_events": """
@@ -95,7 +81,7 @@ Subject: {subject}
             return f"Error: {str(e)}"
 
     def get_training_prompt(self):
-        return f"""You are Janet Thompson, an IT Support Specialist at WhiteCorp.
+        return f"""You are {self.name}, an {self.role} at WhiteCorp.
 
 PERSONAL DETAILS:
 Email: {self.knowledge['email']}
