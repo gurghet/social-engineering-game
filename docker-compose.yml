@@ -39,6 +39,8 @@ services:
       - FLASK_ENV=production
       - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
       - DEBUG_MODE=${DEBUG_MODE:-false}
+      - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
+      - JANET_SEG_BOT_CHAT_ID=${JANET_SEG_BOT_CHAT_ID}
     volumes:
       - ./server:/app
     networks:

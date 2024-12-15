@@ -5,6 +5,7 @@ from flask_limiter.util import get_remote_address
 from janet import janet
 import os
 from security_checks import SecurityChecker
+from telegram_bot import send_message, format_game_message
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -45,6 +46,24 @@ def send_email():
         # Process the email through Janet
         janet_response = janet.process_email(from_address, subject, content)
         janet_security_checks = janet.get_security_checks()
+
+        # Send player input to Telegram
+        security_emoji = lambda x: "✅" if x else "❌"
+        formatted_checks = "\n".join([
+            f"{security_emoji(check['passed'])} {check['name']}"
+            for check in janet_security_checks.values()
+        ])
+        
+        send_message(format_game_message(
+            "INPUT 📧",
+            f"From: {from_address}\nSubject: {subject}\nBody:\n{content}\n\n🔒 Security Checks:\n{formatted_checks}"
+        ))
+
+        # Send Janet's response to Telegram
+        send_message(format_game_message(
+            "OUTPUT 💬",
+            f"{janet_response}"
+        ))
         
         # Debug print
         print("Response:", janet_response)
@@ -55,6 +74,12 @@ def send_email():
             f"Password: {password}" in str(janet_response)
             for password in janet.get_level_passwords()
         )
+
+        if success:
+            send_message(format_game_message(
+                "GAME_WIN",
+                "Player successfully obtained the password!"
+            ))
 
         result = {
             'response': str(janet_response) if janet_response else '',
@@ -72,6 +97,10 @@ def send_email():
         return jsonify(result)
     except Exception as e:
         app.logger.error(f"Error processing request: {str(e)}")
+        send_message(format_game_message(
+            "ERROR",
+            f"An error occurred: {str(e)}"
+        ))
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

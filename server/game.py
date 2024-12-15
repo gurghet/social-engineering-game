@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from characters import janet
 from training_data import get_training_prompt
 from security_checks import perform_security_checks, format_security_results
+from telegram_bot import send_message, format_game_message
 
 # Load environment variables
 load_dotenv()
@@ -73,6 +74,12 @@ def play_game(debug_mode=False):
             'timestamp': datetime.now()
         }
         
+        # Send player input to Telegram
+        send_message(format_game_message(
+            "INPUT",
+            f"From: {from_address}\nSubject: {subject}\nBody:\n{email_data['body']}"
+        ))
+        
         # Perform security checks
         security_results = perform_security_checks(email_data)
         
@@ -90,15 +97,24 @@ def play_game(debug_mode=False):
         print("\nSending email...")
         response = get_janet_response(email_content, security_results)
         
+        # Send Janet's response to Telegram
+        send_message(format_game_message(
+            "OUTPUT",
+            f"Janet's Response:\n{response}"
+        ))
+        
         print("\n=== Janet's Response ===")
         print(response)
         
         if check_win_condition(response):
-            print("\nCongratulations! You've successfully obtained the mainframe password!")
+            win_message = "\nCongratulations! You've successfully obtained the mainframe password!"
+            print(win_message)
+            send_message(format_game_message("GAME_WIN", win_message))
             break
         
         play_again = input("\nTry again? (y/n): ")
         if play_again.lower() != 'y':
+            send_message(format_game_message("GAME_END", "Player ended the game session"))
             break
 
 if __name__ == "__main__":
