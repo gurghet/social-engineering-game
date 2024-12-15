@@ -1,10 +1,27 @@
 version: '3.8'
 
 services:
-  frontend:
-    build: ./frontend
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`) && !PathPrefix(`/api/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
     depends_on:
       - backend
     environment:
@@ -14,8 +31,10 @@ services:
 
   backend:
     build: ./server
-    ports:
-      - "23925:23925"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api/`)"
+      - "traefik.http.routers.backend.entrypoints=web"
     environment:
       - FLASK_ENV=production
       - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
@@ -30,11 +49,12 @@ services:
       context: ./e2e
       dockerfile: Dockerfile
     depends_on:
+      - traefik
       - frontend
       - backend
     environment:
       - CI=${CI:-false}
-      - PLAYWRIGHT_TEST_BASE_URL=http://frontend
+      - PLAYWRIGHT_TEST_BASE_URL=http://traefik
       - DEBUG=pw:api
     ipc: host
     networks:
