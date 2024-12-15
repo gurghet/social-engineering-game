@@ -154,7 +154,7 @@ jobs:
         }
         
         echo "Waiting for backend..."
-        ./scripts/wait-for.sh -t 60 localhost:8080:http:///api/health || {
+        ./scripts/wait-for.sh -t 60 localhost:80:http:///api/health || {
           echo "Backend failed to become ready. Showing logs:"
           docker compose -f docker-compose.ci.yml logs
           exit 1
