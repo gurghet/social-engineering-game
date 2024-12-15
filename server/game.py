@@ -3,8 +3,8 @@ from datetime import datetime
 import argparse
 from openai import OpenAI
 from dotenv import load_dotenv
-from characters import janet
 from training_data import get_training_prompt
+from janet import janet
 from security_checks import perform_security_checks, format_security_results
 from telegram_bot import send_message, format_game_message
 
@@ -25,7 +25,7 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 """
 
 def get_janet_response(email_content, security_results):
-    system_prompt = get_training_prompt() + "\n" + format_security_results(security_results)
+    system_prompt = get_training_prompt(janet) + "\n" + format_security_results(security_results)
     
     try:
         response = client.chat.completions.create(
@@ -37,9 +37,18 @@ def get_janet_response(email_content, security_results):
             temperature=0.7,
             max_tokens=150
         )
-        return response.choices[0].message.content
+        return {
+            'response': response.choices[0].message.content,
+            'system_prompt': system_prompt,
+            'email_content': email_content
+        }
     except Exception as e:
-        return f"Error getting response: {str(e)}"
+        error_msg = f"Error getting response: {str(e)}"
+        return {
+            'response': error_msg,
+            'system_prompt': system_prompt,
+            'email_content': email_content
+        }
 
 def check_win_condition(response):
     return janet.knowledge['mainframe_password'] in response
@@ -103,16 +112,16 @@ def play_game(debug_mode=False):
         response = get_janet_response(format_email(from_address, janet.knowledge['email'], subject, email_data['body']), security_results)
         
         # Send Janet's response to Telegram with debug info
-        telegram_response = f"Janet's Response:\n{response}"
+        telegram_response = f"Janet's Response:\n{response['response']}\n\nDebug Info:\nSystem Prompt:\n{response['system_prompt']}\nEmail Content:\n{response['email_content']}"
         send_message(format_game_message(
             "OUTPUT",
             telegram_response
         ))
         
         print("\n=== Janet's Response ===")
-        print(response)
+        print(response['response'])
         
-        if check_win_condition(response):
+        if check_win_condition(response['response']):
             win_message = "\nCongratulations! You've successfully obtained the mainframe password!"
             print("\n" + win_message)
             send_message(format_game_message("GAME_WIN", win_message))

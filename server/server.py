@@ -4,9 +4,10 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from janet import janet
 import os
-from security_checks import SecurityChecker
+from security_checks import SecurityChecker, perform_security_checks
 from telegram_bot import send_message, format_game_message
 from datetime import datetime
+from game import get_janet_response
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -62,11 +63,10 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         
         # Perform security checks
         janet_security_checks = perform_security_checks({
-            'from': from_address,
-            'to': janet.knowledge['email'],
+            'from_address': from_address,
             'subject': subject,
             'body': body
-        })
+        }, janet.knowledge['email'])
         
         # Get Janet's response
         response = get_janet_response(email_content, janet_security_checks)
@@ -74,19 +74,20 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         # Send response to Telegram (always include debug info)
         send_message(format_game_message(
             "OUTPUT",
-            f"Janet's Response:\n{response}"
+            f"Janet's Response:\n{response['response']}"
         ))
         
         # Return response with debug info only if requested
         return jsonify({
-            'response': response,
+            'response': response['response'],
             'security_checks': janet_security_checks if debug else None,
             'debug_info': {
                 'email': email_content,
                 'from': from_address,
                 'to': janet.knowledge['email'],
                 'subject': subject,
-                'body': body
+                'body': body,
+                'system_prompt': response['system_prompt']
             } if debug else None
         })
     except Exception as e:

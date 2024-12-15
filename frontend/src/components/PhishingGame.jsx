@@ -124,19 +124,19 @@ const PhishingGame = () => {
                 <div>
                   <h5 className="text-emerald-400 mb-2">Email Input</h5>
                   <pre className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
-                    <code className="text-gray-300">{gameState.debugInfo?.input?.email || 'No email sent yet'}</code>
+                    <code className="text-gray-300">{gameState.debugInfo?.email || 'No email sent yet'}</code>
                   </pre>
                 </div>
                 <div>
                   <h5 className="text-emerald-400 mb-2">AI Prompt</h5>
                   <pre className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
-                    <code className="text-gray-300">{gameState.debugInfo?.input?.prompt || 'No prompt generated yet'}</code>
+                    <code className="text-gray-300">{gameState.debugInfo?.system_prompt || 'No prompt generated yet'}</code>
                   </pre>
                 </div>
                 <div>
                   <h5 className="text-emerald-400 mb-2">Raw Response</h5>
                   <pre className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
-                    <code className="text-gray-300">{gameState.debugInfo?.raw_response || 'No response yet'}</code>
+                    <code className="text-gray-300">{gameState.lastResponse || 'No response yet'}</code>
                   </pre>
                 </div>
               </div>
