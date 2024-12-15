@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Mail, Shield, AlertTriangle, CheckCircle, XCircle, Terminal, Loader2, Bug, HelpCircle } from 'lucide-react';
-import RulesCard from './RulesCard';
+import RulesCard from './RulesCard.jsx';
 
 const PhishingGame = () => {
   const [emailContent, setEmailContent] = useState({
