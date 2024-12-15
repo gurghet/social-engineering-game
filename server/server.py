@@ -21,6 +21,10 @@ limiter = Limiter(
 # Debug mode from environment variable, defaults to False
 DEBUG_MODE = True  # Force debug mode for development
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
+
 @app.route('/api/send_email', methods=['POST'])
 @limiter.limit("1 per second")
 def send_email():
