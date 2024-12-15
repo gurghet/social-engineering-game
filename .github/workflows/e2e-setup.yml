@@ -9,12 +9,18 @@ on:
         type: string
         default: 'linux/amd64'
     secrets:
-      OPENAI_API_KEY:
+      OPENAI_API_KEY_JANET:
+        required: true
+      JANET_SEG_BOT_TOKEN:
+        required: true
+      JANET_SEG_BOT_CHAT_ID:
         required: true
 
 env:
   DOCKER_BUILDKIT: 1
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY_JANET }}
+  JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
+  JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
   DEBUG_MODE: true
   CI: true
   DOCKER_DEFAULT_PLATFORM: ${{ inputs.platform }}
@@ -85,7 +91,7 @@ jobs:
         cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
         build-args: |
           VERSION=test
-          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
 
     - name: Move Frontend cache
       run: |
@@ -102,7 +108,9 @@ jobs:
         cache-to: type=local,dest=/tmp/.buildx-cache-backend-new,mode=max
         build-args: |
           VERSION=test
-          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
+          JANET_SEG_BOT_TOKEN=${{ secrets.JANET_SEG_BOT_TOKEN }}
+          JANET_SEG_BOT_CHAT_ID=${{ secrets.JANET_SEG_BOT_CHAT_ID }}
 
     - name: Move Backend cache
       run: |
@@ -123,7 +131,7 @@ jobs:
       run: |
         # Build with BuildKit and export cache
         docker compose -f docker-compose.ci.yml build \
-          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }} \
           --progress=plain
 
     - name: Start containers
