@@ -78,7 +78,7 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         ))
         
         # Return response with debug info only if requested
-        return jsonify({
+        response_data = {
             'response': response['response'],
             'security_checks': janet_security_checks if debug else None,
             'debug_info': {
@@ -89,14 +89,19 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                 'body': body,
                 'system_prompt': response['system_prompt']
             } if debug else None
-        })
+        }
+        
+        # Log the response for debugging
+        app.logger.info(f"Sending response: {response_data}")
+        
+        return jsonify(response_data)
     except Exception as e:
-        app.logger.error(f"Error processing request: {str(e)}")
+        app.logger.error(f"Error processing request: {str(e)}", exc_info=True)
         send_message(format_game_message(
             "ERROR",
             f"An error occurred: {str(e)}"
         ))
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'traceback': str(e.__traceback__)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 23925))
