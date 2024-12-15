@@ -29,6 +29,9 @@ jobs:
   setup-and-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
     - uses: actions/checkout@v3
 
@@ -44,6 +47,13 @@ jobs:
           image=moby/buildkit:latest
           network=host
 
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
     - name: Cache Playwright dependencies
       uses: actions/cache@v4
       with:
@@ -55,33 +65,33 @@ jobs:
           ${{ runner.os }}-playwright-
         retention-days: 7
 
-    - name: Build Frontend with registry cache
+    - name: Build Frontend with GHCR cache
       uses: docker/build-push-action@v4
       with:
         context: ./frontend
         load: true
         tags: social-engineering-game-frontend:test
         cache-from: |
-          type=registry,ref=user/frontend-cache:latest
+          type=registry,ref=ghcr.io/${{ github.repository }}/frontend-cache:latest
           type=local,src=/tmp/.buildx-cache-frontend
         cache-to: |
-          type=registry,ref=user/frontend-cache:latest,mode=max
+          type=registry,ref=ghcr.io/${{ github.repository }}/frontend-cache:latest,mode=max
           type=local,dest=/tmp/.buildx-cache-frontend,mode=max
         build-args: |
           VERSION=test
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
 
-    - name: Build Backend with registry cache
+    - name: Build Backend with GHCR cache
       uses: docker/build-push-action@v4
       with:
         context: ./server
         load: true
         tags: social-engineering-game-backend:test
         cache-from: |
-          type=registry,ref=user/backend-cache:latest
+          type=registry,ref=ghcr.io/${{ github.repository }}/backend-cache:latest
           type=local,src=/tmp/.buildx-cache-backend
         cache-to: |
-          type=registry,ref=user/backend-cache:latest,mode=max
+          type=registry,ref=ghcr.io/${{ github.repository }}/backend-cache:latest,mode=max
           type=local,dest=/tmp/.buildx-cache-backend,mode=max
         build-args: |
           VERSION=test
@@ -133,9 +143,19 @@ jobs:
       if: always()
       run: docker compose -f docker-compose.ci.yml down --remove-orphans
 
-    - name: Cleanup registry caches
+    - name: Cleanup GHCR caches
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "Cleaning up outdated registry caches..."
-        docker buildx imagetools inspect user/frontend-cache:latest --format "{{ .Size }}" | awk '{if($1 > 7 * 1024 * 1024 * 1024) system("docker buildx imagetools remove user/frontend-cache:old")}'
-        docker buildx imagetools inspect user/backend-cache:latest --format "{{ .Size }}" | awk '{if($1 > 7 * 1024 * 1024 * 1024) system("docker buildx imagetools remove user/backend-cache:old")}'
+        echo "Cleaning up outdated GHCR caches..."
+        # Using GitHub API to manage package versions
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /user/packages/container/frontend-cache/versions --jq '.[] | select(.metadata.container.tags | index("latest") | not) | .id' | \
+          xargs -I {} gh api --method DELETE /user/packages/container/frontend-cache/versions/{} || true
+        
+        gh api \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /user/packages/container/backend-cache/versions --jq '.[] | select(.metadata.container.tags | index("latest") | not) | .id' | \
+          xargs -I {} gh api --method DELETE /user/packages/container/backend-cache/versions/{} || true
