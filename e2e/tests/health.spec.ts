@@ -8,7 +8,7 @@ test.describe('Health Checks', () => {
   });
 
   test('backend health check should return healthy', async ({ request }) => {
-    const response = await request.get('/api/health');
+    const response = await request.fetch('http://localhost:8080/api/health');
     expect(response.ok()).toBeTruthy();
     const data = await response.json();
     expect(data).toEqual({ status: 'healthy' });

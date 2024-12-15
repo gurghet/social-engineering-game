@@ -6,6 +6,7 @@ from janet import janet
 import os
 from security_checks import SecurityChecker
 from telegram_bot import send_message, format_game_message
+from datetime import datetime
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -18,9 +19,6 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
-# Debug mode from environment variable, defaults to False
-DEBUG_MODE = True  # Force debug mode for development
-
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "healthy"}), 200
@@ -29,72 +27,68 @@ def health_check():
 @limiter.limit("1 per second")
 def send_email():
     try:
-        data = request.json
-        
-        # Extract email data
-        from_address = data.get('from_address', '')
-        subject = data.get('subject', '')
-        content = data.get('content', '')
-        target_email = data.get('target_email', '')
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # Get debug mode from request parameter
         debug = data.get('debug', False)
         
+        # Extract email data
+        from_address = data.get('from')
+        subject = data.get('subject')
+        body = data.get('body')
+        
+        if not all([from_address, subject, body]):
+            return jsonify({"error": "Missing required fields"}), 400
+            
+        # Format the email content
+        email_content = f"""
+From: {from_address}
+To: {janet.knowledge['email']}
+Subject: {subject}
+Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+{body}
+"""
         # Log the email details for debugging
-        print("Processing email - From:", from_address)
-        print("Subject:", subject)
-        print("Content:", content)
-
-        # Process the email through Janet
-        janet_response = janet.process_email(from_address, subject, content)
-        janet_security_checks = janet.get_security_checks()
-
-        # Send player input to Telegram
-        security_emoji = lambda x: "✅" if x else "❌"
-        formatted_checks = "\n".join([
-            f"{security_emoji(check['passed'])} {check['name']}"
-            for check in janet_security_checks.values()
-        ])
+        print(f"\nReceived email:\n{email_content}")
         
+        # Send to Telegram (always include debug info)
         send_message(format_game_message(
-            "INPUT 📧",
-            f"From: {from_address}\nSubject: {subject}\nBody:\n{content}\n\n🔒 Security Checks:\n{formatted_checks}"
-        ))
-
-        # Send Janet's response to Telegram
-        send_message(format_game_message(
-            "OUTPUT 💬",
-            f"{janet_response}"
+            "INPUT",
+            f"From: {from_address}\nSubject: {subject}\nBody:\n{body}"
         ))
         
-        # Debug print
-        print("Response:", janet_response)
-        print("Security checks:", janet_security_checks)
+        # Perform security checks
+        janet_security_checks = perform_security_checks({
+            'from': from_address,
+            'to': janet.knowledge['email'],
+            'subject': subject,
+            'body': body
+        })
         
-        # Check if password was obtained by looking for the exact format in the response
-        success = "Password: " in str(janet_response) and any(
-            f"Password: {password}" in str(janet_response)
-            for password in janet.get_level_passwords()
-        )
-
-        if success:
-            send_message(format_game_message(
-                "GAME_WIN",
-                "Player successfully obtained the password!"
-            ))
-
-        result = {
-            'response': str(janet_response) if janet_response else '',
-            'success': success,
-            'security_checks': janet_security_checks if (DEBUG_MODE and debug) else None,
+        # Get Janet's response
+        response = get_janet_response(email_content, janet_security_checks)
+        
+        # Send response to Telegram (always include debug info)
+        send_message(format_game_message(
+            "OUTPUT",
+            f"Janet's Response:\n{response}"
+        ))
+        
+        # Return response with debug info only if requested
+        return jsonify({
+            'response': response,
+            'security_checks': janet_security_checks if debug else None,
             'debug_info': {
-                'input': {
-                    'email': f"From: {from_address}\nSubject: {subject}\n\n{content}",
-                    'prompt': janet.get_last_prompt()
-                },
-                'raw_response': janet.get_last_raw_response()
-            } if (DEBUG_MODE and debug) else None
-        }
-        print("Sending result:", result)
-        return jsonify(result)
+                'email': email_content,
+                'from': from_address,
+                'to': janet.knowledge['email'],
+                'subject': subject,
+                'body': body
+            } if debug else None
+        })
     except Exception as e:
         app.logger.error(f"Error processing request: {str(e)}")
         send_message(format_game_message(

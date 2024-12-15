@@ -17,10 +17,10 @@ services:
       platforms:
         - linux/amd64
     ports:
-      - "23925:23925"
+      - "8080:8080"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - DEBUG_MODE=true
+      - PORT=8080  # Make the server listen on port 8080 in CI
 
   e2e:
     build:
