@@ -1,9 +1,6 @@
-name: E2E Tests
+name: Push Tests
 
 on:
-  pull_request:
-    branches:
-      - master  # For pull request events targeting master
   push:
     branches:
       - master  # For pushes to master (after merges)
