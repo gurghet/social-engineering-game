@@ -165,7 +165,7 @@ jobs:
         cd e2e
         npm ci
         npx playwright install --with-deps chromium
-        PLAYWRIGHT_TEST_BASE_URL=http://localhost npm run test:e2e
+        PLAYWRIGHT_TEST_BASE_URL=http://localhost npm test
 
     - name: Upload Playwright test results
       if: always()
