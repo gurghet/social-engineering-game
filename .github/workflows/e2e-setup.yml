@@ -34,12 +34,18 @@ jobs:
       with:
         buildkitd-flags: --debug
 
+    - name: Enable BuildKit caching
+      run: |
+        echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+        echo "COMPOSE_DOCKER_CLI_BUILD=1" >> $GITHUB_ENV
+
     - name: Build containers
+      env:
+        DOCKER_BUILDKIT: 1
+        COMPOSE_DOCKER_CLI_BUILD: 1
       run: |
         docker compose -f docker-compose.ci.yml build \
-          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-          --cache-from type=gha \
-          --cache-to type=gha,mode=max
+          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
     - name: Start containers
       run: |
