@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
-      - master  # Only run on PRs targeting master
+      - main  # Only run on PRs targeting main
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -16,3 +16,6 @@ jobs:
       platform: 'linux/amd64'  # Only test AMD64 for PRs
     secrets:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
+      JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
+      JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}

@@ -19,7 +19,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY_JANET}
+      - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
+      - JANET_SEG_BOT_CHAT_ID=${JANET_SEG_BOT_CHAT_ID}
       - PORT=8080  # Make the server listen on port 8080 in CI
 
   e2e:

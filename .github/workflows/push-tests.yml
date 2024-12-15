@@ -3,11 +3,10 @@ name: Push Tests
 on:
   push:
     branches:
-      - master
-    # paths-ignore:
-    #   - '**.md'
-    #   - 'docs/**'
-  workflow_dispatch:
+      - master  # Only run when changes are merged into master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 jobs:
   test-amd64:
@@ -15,4 +14,6 @@ jobs:
     with:
       platform: 'linux/amd64'
     secrets:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
+      JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
+      JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
