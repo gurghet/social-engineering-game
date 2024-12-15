@@ -1,0 +1,84 @@
+name: Version Management
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Component to version (frontend/server/both)'
+        required: true
+        type: choice
+        options:
+          - frontend
+          - server
+          - both
+      bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      message:
+        description: 'Version bump reason'
+        required: true
+        type: string
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install semver
+        run: pip install semver
+
+      - name: Bump versions
+        run: |
+          function bump_version() {
+            local component=$1
+            local current_version=$(cat $component/version.txt)
+            local new_version=$(python -c "
+          import semver
+          v = semver.Version.parse('${current_version}')
+          if '${{ github.event.inputs.bump }}' == 'patch':
+              print(v.bump_patch())
+          elif '${{ github.event.inputs.bump }}' == 'minor':
+              print(v.bump_minor())
+          else:
+              print(v.bump_major())
+          ")
+            echo "$new_version" > $component/version.txt
+            echo "::set-output name=${component}_version::$new_version"
+          }
+
+          if [[ "${{ github.event.inputs.component }}" == "both" ]]; then
+            bump_version "frontend"
+            bump_version "server"
+          else
+            bump_version "${{ github.event.inputs.component }}"
+          fi
+
+      - name: Create version bump commit
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add frontend/version.txt server/version.txt
+          git commit -m "bump version: ${{ github.event.inputs.message }}"
+          git tag -a "v$(cat ${{ github.event.inputs.component }}/version.txt)" -m "${{ github.event.inputs.message }}"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true

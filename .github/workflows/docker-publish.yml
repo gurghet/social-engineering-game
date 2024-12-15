@@ -35,17 +35,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get versions
+        id: versions
+        run: |
+          echo "FRONTEND_VERSION=$(cat frontend/version.txt)" >> $GITHUB_ENV
+          echo "BACKEND_VERSION=$(cat server/version.txt)" >> $GITHUB_ENV
+
       - name: Extract metadata (tags, labels) for Frontend
         id: meta-frontend
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.FRONTEND_VERSION }}
+          labels: |
+            org.opencontainers.image.version=${{ env.FRONTEND_VERSION }}
+            org.opencontainers.image.title=Social Engineering Game Frontend
+            org.opencontainers.image.description=Frontend for the Social Engineering Game
 
       - name: Extract metadata (tags, labels) for Backend
         id: meta-backend
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.BACKEND_VERSION }}
+          labels: |
+            org.opencontainers.image.version=${{ env.BACKEND_VERSION }}
+            org.opencontainers.image.title=Social Engineering Game Backend
+            org.opencontainers.image.description=Backend for the Social Engineering Game
 
       - name: Build and push Frontend Docker image
         uses: docker/build-push-action@v4
@@ -57,6 +77,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+          build-args: |
+            VERSION=${{ env.FRONTEND_VERSION }}
 
       - name: Build and push Backend Docker image
         uses: docker/build-push-action@v4
@@ -68,3 +90,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+          build-args: |
+            VERSION=${{ env.BACKEND_VERSION }}
