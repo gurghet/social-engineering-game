@@ -34,7 +34,7 @@ const PhishingGame = () => {
   const sendEmail = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/send_email`, {
+      const response = await fetch('/api/send_email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
