@@ -32,9 +32,13 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build and run containers
+    - name: Build containers
       run: |
-        docker compose -f docker-compose.ci.yml build
+        docker compose -f docker-compose.ci.yml build \
+          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+
+    - name: Start containers
+      run: |
         docker compose -f docker-compose.ci.yml up -d
 
     - name: Wait for services to be ready
@@ -93,5 +97,3 @@ jobs:
       run: |
         # Remove local images
         docker image rm -f $(docker images 'social-engineering-game-*' -q) || true
-        # Remove registry images
-        docker image rm -f $(docker images 'ghcr.io/gurghet/social-engineering-game-*' -q) || true
