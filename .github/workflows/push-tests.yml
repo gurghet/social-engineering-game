@@ -1,0 +1,25 @@
+name: Push Tests
+
+on:
+  push:
+    branches:
+      - master  # Only run when changes are merged into master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+jobs:
+  test-amd64:
+    uses: ./.github/workflows/e2e-setup.yml
+    with:
+      platform: 'linux/amd64'
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  test-arm64:
+    needs: test-amd64  # Run after amd64 tests pass
+    uses: ./.github/workflows/e2e-setup.yml
+    with:
+      platform: 'linux/arm64'
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

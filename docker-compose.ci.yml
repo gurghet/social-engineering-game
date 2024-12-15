@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    ports:
+      - "80:80"
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    ports:
+      - "23925:23925"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEBUG_MODE=true
+
+  e2e:
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+    depends_on:
+      - frontend
+      - server

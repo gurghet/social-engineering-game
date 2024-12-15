@@ -1,0 +1,18 @@
+name: PR Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - master  # Only run on PRs targeting master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+jobs:
+  test:
+    uses: ./.github/workflows/e2e-setup.yml
+    with:
+      platform: 'linux/amd64'  # Only test AMD64 for PRs
+    secrets:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
