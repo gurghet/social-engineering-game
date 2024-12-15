@@ -1,17 +1,13 @@
 name: E2E Tests
 
 on:
-  push:
-    branches:
-      - master
-      - 'test-ci*'
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-  
   pull_request:
     branches:
-      - master
+      - master  # For pull request events targeting master
+  push:
+    branches:
+      - master  # For pushes to master (after merges)
+      - 'test-ci*'  # For our test branches
     paths-ignore:
       - '**.md'
       - 'docs/**'
