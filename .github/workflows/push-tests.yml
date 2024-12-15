@@ -3,19 +3,13 @@ name: Push Tests
 on:
   push:
     branches:
-      - master  # For pushes to master (after merges)
-      - 'test-ci*'  # For our test branches
+      - master  # Only run when changes are merged into master
     paths-ignore:
       - '**.md'
       - 'docs/**'
-    # Don't run on PRs
-    tags-ignore:
-      - '*'
 
 jobs:
   test:
-    # Skip if this is a PR
-    if: github.event_name == 'push' && github.event.pull_request == null
     uses: ./.github/workflows/e2e-setup.yml
     secrets:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
