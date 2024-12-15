@@ -68,14 +68,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
-
-      - name: Prune old images
-        uses: snok/container-retention-policy@v3
-        with:
-          account: ${{ github.repository_owner }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: |
-            ${{ env.FRONTEND_IMAGE_NAME }}
-            ${{ env.BACKEND_IMAGE_NAME }}
-          keep-at-least: 5
-          skip-tags: latest
