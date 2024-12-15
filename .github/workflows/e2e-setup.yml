@@ -4,10 +4,10 @@ on:
   workflow_call:
     inputs:
       platform:
-        description: "Platform to build for"
+        description: 'Platform to build for'
         required: false
         type: string
-        default: "linux/amd64"
+        default: 'linux/amd64'
     secrets:
       OPENAI_API_KEY_JANET:
         required: true
@@ -29,9 +29,6 @@ jobs:
   setup-and-test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
     - uses: actions/checkout@v3
 
@@ -47,14 +44,31 @@ jobs:
           image=moby/buildkit:latest
           network=host
 
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
+    - name: Cache Frontend Docker layers
+      uses: actions/cache@v4
       with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ github.token }}
+        path: /tmp/.buildx-cache-frontend
+        key: ${{ runner.os }}-buildx-frontend-${{ hashFiles('frontend/package*.json', 'frontend/yarn.lock', 'frontend/Dockerfile') }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-frontend-
+          ${{ runner.os }}-buildx-
+        enableCrossOsArchive: true
+        lookup-only: false
+        max-age: 604800 # 1 week in seconds
 
-    - name: Cache Playwright dependencies
+    - name: Cache Backend Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache-backend
+        key: ${{ runner.os }}-buildx-backend-${{ hashFiles('server/requirements.txt', 'server/Dockerfile') }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-backend-
+          ${{ runner.os }}-buildx-
+        enableCrossOsArchive: true
+        lookup-only: false
+        max-age: 604800 # 1 week in seconds
+
+    - name: Cache Playwright
       uses: actions/cache@v4
       with:
         path: |
@@ -63,58 +77,82 @@ jobs:
         key: ${{ runner.os }}-playwright-${{ hashFiles('e2e/package*.json') }}
         restore-keys: |
           ${{ runner.os }}-playwright-
-        retention-days: 7
+        enableCrossOsArchive: true
+        lookup-only: false
+        max-age: 604800 # 1 week in seconds
 
-    - name: Build Frontend with GHCR cache
+    - name: Build Frontend
       uses: docker/build-push-action@v4
       with:
         context: ./frontend
         load: true
         tags: social-engineering-game-frontend:test
-        cache-from: |
-          type=registry,ref=ghcr.io/${{ github.repository }}/frontend-cache:latest
-          type=local,src=/tmp/.buildx-cache-frontend
-        cache-to: |
-          type=registry,ref=ghcr.io/${{ github.repository }}/frontend-cache:latest,mode=max
-          type=local,dest=/tmp/.buildx-cache-frontend,mode=max
+        cache-from: type=local,src=/tmp/.buildx-cache-frontend
+        cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
         build-args: |
           VERSION=test
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
 
-    - name: Build Backend with GHCR cache
+    - name: Move Frontend cache
+      run: |
+        rm -rf /tmp/.buildx-cache-frontend
+        mv /tmp/.buildx-cache-frontend-new /tmp/.buildx-cache-frontend
+
+    - name: Build Backend
       uses: docker/build-push-action@v4
       with:
         context: ./server
         load: true
         tags: social-engineering-game-backend:test
-        cache-from: |
-          type=registry,ref=ghcr.io/${{ github.repository }}/backend-cache:latest
-          type=local,src=/tmp/.buildx-cache-backend
-        cache-to: |
-          type=registry,ref=ghcr.io/${{ github.repository }}/backend-cache:latest,mode=max
-          type=local,dest=/tmp/.buildx-cache-backend,mode=max
+        cache-from: type=local,src=/tmp/.buildx-cache-backend
+        cache-to: type=local,dest=/tmp/.buildx-cache-backend-new,mode=max
         build-args: |
           VERSION=test
           OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
           JANET_SEG_BOT_TOKEN=${{ secrets.JANET_SEG_BOT_TOKEN }}
           JANET_SEG_BOT_CHAT_ID=${{ secrets.JANET_SEG_BOT_CHAT_ID }}
 
+    - name: Move Backend cache
+      run: |
+        rm -rf /tmp/.buildx-cache-backend
+        mv /tmp/.buildx-cache-backend-new /tmp/.buildx-cache-backend
+
+    - name: Enable BuildKit caching
+      run: |
+        echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+        echo "COMPOSE_DOCKER_CLI_BUILD=1" >> $GITHUB_ENV
+        echo "BUILDKIT_PROGRESS=plain" >> $GITHUB_ENV
+
+    - name: Build containers
+      env:
+        DOCKER_BUILDKIT: 1
+        COMPOSE_DOCKER_CLI_BUILD: 1
+        BUILDKIT_PROGRESS: plain
+      run: |
+        # Build with BuildKit and export cache
+        docker compose -f docker-compose.ci.yml build \
+          --build-arg OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }} \
+          --progress=plain
+
     - name: Start containers
       run: |
         docker compose -f docker-compose.ci.yml up -d
+
+    - name: Make wait-for script executable
+      run: chmod +x scripts/wait-for.sh
 
     - name: Wait for services to be ready
       run: |
         echo "Waiting for containers to start..."
         docker ps
-
+        
         echo "Waiting for frontend..."
         ./scripts/wait-for.sh -t 60 localhost:80:http:///health || {
           echo "Frontend failed to become ready. Showing logs:"
           docker compose -f docker-compose.ci.yml logs
           exit 1
         }
-
+        
         echo "Waiting for backend..."
         ./scripts/wait-for.sh -t 60 localhost:8080:http:///api/health || {
           echo "Backend failed to become ready. Showing logs:"
@@ -139,23 +177,44 @@ jobs:
           e2e/test-results/
         retention-days: 30
 
+    - uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: playwright-report
+        path: e2e/playwright-report/
+        retention-days: 30
+
     - name: Stop containers
       if: always()
       run: docker compose -f docker-compose.ci.yml down --remove-orphans
 
-    - name: Cleanup GHCR caches
+    - name: Remove images
+      if: always()
+      run: |
+        # Remove local images
+        docker image rm -f $(docker images 'social-engineering-game-*' -q) || true
+
+    - name: Cleanup old caches
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "Cleaning up outdated GHCR caches..."
-        # Using GitHub API to manage package versions
-        gh api \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          /user/packages/container/frontend-cache/versions --jq '.[] | select(.metadata.container.tags | index("latest") | not) | .id' | \
-          xargs -I {} gh api --method DELETE /user/packages/container/frontend-cache/versions/{} || true
+        # List and remove caches older than 1 week
+        gh extension install actions/gh-actions-cache
         
-        gh api \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          /user/packages/container/backend-cache/versions --jq '.[] | select(.metadata.container.tags | index("latest") | not) | .id' | \
-          xargs -I {} gh api --method DELETE /user/packages/container/backend-cache/versions/{} || true
+        CACHES=$(gh actions-cache list -L 100 --sort created-at --order desc | grep -E '.*-buildx-.*|.*-playwright-.*')
+        
+        echo "Found caches:"
+        echo "$CACHES"
+        
+        echo "Cleaning up caches older than 1 week..."
+        echo "$CACHES" | while read -r line; do
+          CACHE_KEY=$(echo $line | cut -f1)
+          CACHE_DATE=$(echo $line | cut -f3)
+          CACHE_AGE=$(( ($(date +%s) - $(date -j -f "%Y-%m-%d" "$CACHE_DATE" +%s)) / 86400 ))
+          
+          if [ $CACHE_AGE -gt 7 ]; then
+            echo "Deleting cache $CACHE_KEY (${CACHE_AGE} days old)"
+            gh actions-cache delete "$CACHE_KEY" --confirm
+          fi
+        done
+      env:
+        GH_TOKEN: ${{ github.token }}
