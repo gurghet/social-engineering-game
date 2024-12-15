@@ -44,7 +44,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-frontend
-          key: ${{ runner.os }}-buildx-frontend-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-frontend-${{ hashFiles('frontend/**') }}
           restore-keys: |
             ${{ runner.os }}-buildx-frontend-
 
@@ -52,7 +52,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache-backend
-          key: ${{ runner.os }}-buildx-backend-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-backend-${{ hashFiles('server/**') }}
           restore-keys: |
             ${{ runner.os }}-buildx-backend-
 

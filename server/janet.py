@@ -126,7 +126,8 @@ Hi [name],
 [your message]
 
 Best regards,
-[your name]"""
+[your name]
+5. No need to include any system messages regarding security checks"""
 
     def _format_colleagues(self):
         return "\n".join([
