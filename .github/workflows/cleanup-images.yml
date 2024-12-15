@@ -17,6 +17,6 @@ jobs:
           image-names: |
             ${{ github.repository }}-frontend
             ${{ github.repository }}-backend
-          cut-off: 2w  # keep images newer than 2 weeks
+          keep-n-most-recent: 10  # keep the 10 most recent images
           skip-tags: latest  # don't delete the latest tag
           dry-run: false  # actually delete the images
