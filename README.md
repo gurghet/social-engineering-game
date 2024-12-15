@@ -36,3 +36,7 @@ python game.py
 ## Note
 
 This is an educational game designed to demonstrate social engineering techniques. Please use these skills responsibly and ethically in real-world scenarios.
+
+## Testing e2e locally
+
+Please use `BACKEND_PORT=8082 npx playwright test` from the e2e directory for now.
