@@ -21,7 +21,7 @@ limiter = Limiter(
 # Debug mode from environment variable, defaults to False
 DEBUG_MODE = True  # Force debug mode for development
 
-@app.route('/send_email', methods=['POST'])
+@app.route('/api/send_email', methods=['POST'])
 @limiter.limit("1 per second")
 def send_email():
     try:
@@ -72,4 +72,4 @@ def send_email():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=DEBUG_MODE, port=23925)
+    app.run(debug=True, host='0.0.0.0', port=23925)

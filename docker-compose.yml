@@ -9,6 +9,8 @@ services:
       - backend
     environment:
       - NODE_ENV=production
+    networks:
+      - app-network
 
   backend:
     build: ./server
@@ -16,10 +18,12 @@ services:
       - "23925:23925"
     environment:
       - FLASK_ENV=production
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
       - DEBUG_MODE=${DEBUG_MODE:-false}
     volumes:
       - ./server:/app
+    networks:
+      - app-network
 
   e2e:
     build:
@@ -31,7 +35,15 @@ services:
     environment:
       - CI=${CI:-false}
       - PLAYWRIGHT_TEST_BASE_URL=http://frontend
-    network_mode: "host"  # This allows the container to access localhost
+      - DEBUG=pw:api
+    ipc: host
+    networks:
+      - app-network
     volumes:
       - ./e2e/test-results:/e2e/test-results
       - ./e2e/playwright-report:/e2e/playwright-report
+      - ./e2e/tests:/e2e/tests
+
+networks:
+  app-network:
+    driver: bridge
