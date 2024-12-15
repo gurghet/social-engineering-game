@@ -11,8 +11,8 @@ on:
 
 jobs:
   test:
-    # Only run on pull requests
-    if: github.event_name == 'pull_request'
     uses: ./.github/workflows/e2e-setup.yml
+    with:
+      platform: 'linux/amd64'  # Only test AMD64 for PRs
     secrets:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

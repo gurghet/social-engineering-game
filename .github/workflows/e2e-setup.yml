@@ -2,6 +2,12 @@ name: E2E Setup
 
 on:
   workflow_call:
+    inputs:
+      platform:
+        description: 'Platform to build for'
+        required: false
+        type: string
+        default: 'linux/amd64'
     secrets:
       OPENAI_API_KEY:
         required: true
@@ -14,7 +20,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       DEBUG_MODE: true
       CI: true
-      DOCKER_DEFAULT_PLATFORM: linux/amd64
+      DOCKER_DEFAULT_PLATFORM: ${{ inputs.platform }}
 
     steps:
     - uses: actions/checkout@v3
