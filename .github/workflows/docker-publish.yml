@@ -3,8 +3,9 @@ name: Docker Build and Push
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 env:
   REGISTRY: ghcr.io
@@ -56,3 +57,21 @@ jobs:
           push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
+
+      - name: Clean up old images
+        if: success()
+        run: |
+          # Keep only the latest 5 versions of each image
+          for image in "${{ env.FRONTEND_IMAGE_NAME }}" "${{ env.BACKEND_IMAGE_NAME }}"; do
+            # Get list of image digests sorted by creation date (newest first)
+            digests=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/user/packages/container/$image/versions" | \
+              jq -r '.[] | select(.metadata.container.tags[] != "latest") | .id' | \
+              tail -n +6)
+            
+            # Delete old versions
+            for digest in $digests; do
+              curl -X DELETE -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                "https://api.github.com/user/packages/container/$image/versions/$digest"
+            done
+          done
