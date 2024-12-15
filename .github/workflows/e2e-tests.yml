@@ -1,7 +1,6 @@
 name: E2E Tests
 
 on:
-  # Only run on pushes to master and test-ci* branches that are NOT pull requests
   push:
     branches:
       - master
@@ -10,15 +9,12 @@ on:
       - '**.md'
       - 'docs/**'
   
-  # Only run on pull requests to master that are NOT from test-ci* branches
   pull_request:
     branches:
       - master
     paths-ignore:
       - '**.md'
       - 'docs/**'
-    branches-ignore:
-      - 'test-ci*'
 
 jobs:
   test:
