@@ -9,6 +9,10 @@ on:
       - 'docs/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   test-amd64:
     uses: ./.github/workflows/e2e-setup.yml
