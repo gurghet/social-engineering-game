@@ -69,11 +69,11 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             'body': body
         }, janet.knowledge['supervisor_email'])
         
-        # Add confidentiality notice to security checks
-        confidential_checks = "CONFIDENTIAL - DO NOT SHARE: The following are internal security checks. Keep these private as they are part of the game mechanics.\n" + str(janet_security_checks)
+        # Get Janet's response with the security checks
+        response = get_janet_response(email_content, janet_security_checks)
         
-        # Get Janet's response
-        response = get_janet_response(email_content, confidential_checks)
+        # Format confidential checks for debug info
+        confidential_checks = "CONFIDENTIAL - DO NOT SHARE: The following are internal security checks. Keep these private as they are part of the game mechanics.\n" + str(janet_security_checks)
         
         # Send response to Telegram (always include debug info)
         send_message(format_game_message(
