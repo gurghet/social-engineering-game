@@ -91,7 +91,7 @@ const PhishingGame = () => {
       
       setGameState(prev => ({
         ...prev,
-        lastResponse: data.lastResponse,
+        lastResponse: data.response,
         success: data.success,
         securityChecks: data.securityChecks,
         debugInfo: data.debugInfo
