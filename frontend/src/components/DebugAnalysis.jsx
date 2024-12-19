@@ -48,7 +48,7 @@ const DebugAnalysis = ({ securityChecks, debugInfo, lastResponse }) => {
               <div>
                 <h5 className="text-emerald-400 mb-2">AI Prompt</h5>
                 <pre className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
-                  <code className="text-gray-300">{debugInfo?.system_prompt || 'No prompt generated yet'}</code>
+                  <code className="text-gray-300">{debugInfo?.raw_input || 'No prompt generated yet'}</code>
                 </pre>
               </div>
               <div>

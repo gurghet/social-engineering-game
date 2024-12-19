@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import argparse
+import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from training_data import get_training_prompt
@@ -33,7 +34,16 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 """
 
 def get_janet_response(email_content, security_results):
-    system_prompt = get_training_prompt(janet) + "\n" + format_security_results(security_results)
+    system_prompt = get_training_prompt(janet)
+    game_turn_content = f"""
+    Player sent the following email:
+    {email_content}
+
+    Janet's security checks:
+    CONFIDENTIAL - DO NOT SHARE: The following are internal security checks. 
+    Keep these private as they are part of the game mechanics.
+    {format_security_results(security_results)}
+    """
     
     if not client:
         error_msg = "Janet is currently unavailable. Please try again later."
@@ -41,23 +51,25 @@ def get_janet_response(email_content, security_results):
         return {
             'response': error_msg,
             'system_prompt': system_prompt,
-            'email_content': email_content
+            'raw_input': ''
         }
+
+    ai_input_messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": game_turn_content}
+    ]
     
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": email_content}
-            ],
-            temperature=0.7,
+            model="gpt-4o-mini",
+            messages=ai_input_messages,
+            temperature=0.6,
             max_tokens=150
         )
         return {
             'response': response.choices[0].message.content,
             'system_prompt': system_prompt,
-            'email_content': email_content
+            'raw_input': json.dumps(ai_input_messages, indent=2)
         }
     except Exception as e:
         error_msg = "Janet is currently unavailable. Please try again later."
@@ -65,7 +77,7 @@ def get_janet_response(email_content, security_results):
         return {
             'response': error_msg,
             'system_prompt': system_prompt,
-            'email_content': email_content
+            'raw_input': json.dumps(ai_input_messages, indent=2)
         }
 
 def check_win_condition(response):
@@ -130,9 +142,18 @@ def play_game(debug_mode=False):
         response = get_janet_response(format_email(from_address, janet.knowledge['email'], subject, email_data['body']), security_results)
         
         # Send Janet's response to Telegram with debug info
-        telegram_response = f"Janet's Response:\n{response['response']}\n\nDebug Info:\nSystem Prompt:\n{response['system_prompt']}\nEmail Content:\n{response['email_content']}"
+        debug_info = {
+            "securityChecks": security_results,
+            "debugInfo": {
+                "email": format_email(from_address, janet.knowledge['email'], subject, email_data['body']),
+                "system_prompt": response['system_prompt']
+            },
+            "lastResponse": response['raw_input']
+        }
+        
+        telegram_response = json.dumps(debug_info, indent=2)
         send_message(format_game_message(
-            "OUTPUT",
+            "NEW GAME TURN",
             telegram_response
         ))
         

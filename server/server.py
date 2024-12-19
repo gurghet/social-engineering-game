@@ -56,12 +56,6 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         # Log the email details for debugging
         print(f"\nReceived email:\n{email_content}")
         
-        # Send to Telegram (always include debug info)
-        send_message(format_game_message(
-            "INPUT",
-            f"From: {from_address}\nSubject: {subject}\nBody:\n{body}"
-        ))
-        
         # Perform security checks
         janet_security_checks = perform_security_checks({
             'from_address': from_address,
@@ -71,28 +65,30 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         
         # Get Janet's response with the security checks
         response = get_janet_response(email_content, janet_security_checks)
-        
-        # Format confidential checks for debug info
-        confidential_checks = "CONFIDENTIAL - DO NOT SHARE: The following are internal security checks. Keep these private as they are part of the game mechanics.\n" + str(janet_security_checks)
-        
-        # Send response to Telegram (always include debug info)
-        send_message(format_game_message(
-            "OUTPUT",
-            f"Janet's Response:\n{response['response']}"
-        ))
-        
+
+        # Send a single well-formatted message to Telegram
+        game_round_message = f"""Player's Email:
+{email_content}
+
+Janet's Response:
+{response['response']}
+
+Security Checks:
+{janet_security_checks}"""
+
+        send_message(format_game_message("GAME_ROUND", game_round_message))
+                
         # Return response with debug info only if requested
         response_data = {
             'response': response['response'],
-            'security_checks': janet_security_checks if debug else None,
-            'debug_info': {
+            'securityChecks': janet_security_checks if debug else None,
+            'debugInfo': {
                 'email': email_content,
-                'from': from_address,
-                'to': janet.knowledge['email'],
-                'subject': subject,
-                'body': body,
-                'system_prompt': response['system_prompt']
-            } if debug else None
+                'system_prompt': response['system_prompt'],
+                'raw_input': response['raw_input']
+            } if debug else None,
+            'lastResponse': response['response'] if debug else None,
+            'success': False  # Add success field
         }
         
         # Log the response for debugging

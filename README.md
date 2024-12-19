@@ -40,3 +40,10 @@ This is an educational game designed to demonstrate social engineering technique
 ## Testing e2e locally
 
 Please use `BACKEND_PORT=8082 npx playwright test` from the e2e directory for now.
+
+## Things to do
+
+[ ] Add CAPTCHA to the game
+[ ] Add more background story
+[ ] Display progress (which is really the intel you have gathered)
+[ ] In the rules explain that each level is 0-shot

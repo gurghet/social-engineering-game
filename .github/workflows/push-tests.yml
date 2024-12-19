@@ -22,3 +22,15 @@ jobs:
       OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
       JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
       JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
+
+  release:
+    needs: test-amd64
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          tag_name: v${{ github.run_number }}

@@ -15,6 +15,9 @@ const PhishingGame = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
+  useEffect(() => {
+    console.log('isDebugMode state:', isDebugMode);
+  }, [isDebugMode]);
   const [showRules, setShowRules] = useState(false);
   const [hasReadRules, setHasReadRules] = useState(() => {
     return localStorage.getItem('hasReadRules') === 'true';
@@ -22,7 +25,10 @@ const PhishingGame = () => {
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    setIsDebugMode(urlParams.get('debug') === 'true');
+    const debugParam = urlParams.get('debug');
+    console.log('Debug parameter:', debugParam);
+    console.log('URL search:', window.location.search);
+    setIsDebugMode(debugParam === 'true');
   }, []);
   
   const [gameState, setGameState] = useState({
@@ -85,10 +91,10 @@ const PhishingGame = () => {
       
       setGameState(prev => ({
         ...prev,
-        lastResponse: data.response,
+        lastResponse: data.lastResponse,
         success: data.success,
-        securityChecks: data.security_checks,
-        debugInfo: data.debug_info
+        securityChecks: data.securityChecks,
+        debugInfo: data.debugInfo
       }));
     } catch (error) {
       console.error('Error sending email:', error);
@@ -150,6 +156,7 @@ const PhishingGame = () => {
         />
 
         {isDebugMode && (
+          console.log('Debug props:', { securityChecks: gameState.securityChecks, debugInfo: gameState.debugInfo, lastResponse: gameState.lastResponse }),
           <DebugAnalysis 
             securityChecks={gameState.securityChecks}
             debugInfo={gameState.debugInfo}

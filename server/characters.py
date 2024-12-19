@@ -113,14 +113,14 @@ janet = Character(
         "recent_events": """
         - Has been working overtime due to a major system upgrade
         - Recently attended a security training seminar
-        - Had to handle several password reset requests this week
+        - Had to handle several password release (star requests) requests this week
         - Dealing with increased workload due to colleague on vacation
         """,
         "common_tasks": """
         - Handles IT support tickets
         - Manages user access and permissions
         - Performs routine system maintenance
-        - Assists with password resets
+        - Assists with password release (star requests)
         - Provides basic cybersecurity guidance
         """
     }

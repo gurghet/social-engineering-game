@@ -4,6 +4,7 @@ from telegram.error import TelegramError
 import asyncio
 from functools import wraps
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -47,11 +48,19 @@ def format_game_message(event_type: str, content: str) -> str:
     """Format a game event message for Telegram.
     
     Args:
-        event_type (str): Type of event (e.g., 'INPUT', 'OUTPUT')
+        event_type (str): Type of event (e.g., 'GAME_ROUND')
         content (str): The content to format
         
     Returns:
-        str: Formatted message
+        str: Formatted message for Telegram
     """
-    separator = "─" * 30
-    return f"🎮 {event_type}\n{separator}\n{content}\n{separator}"
+    divider = "=" * 40
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    return f"""🎮 Social Engineering Game - {event_type}
+⏰ {timestamp}
+{divider}
+
+{content}
+
+{divider}"""
