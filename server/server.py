@@ -21,6 +21,22 @@ limiter = Limiter(
     storage_uri="memory://"
 )
 
+@app.errorhandler(429)  # HTTP 429 Too Many Requests
+def ratelimit_handler(e):
+    # Get the current limit that was exceeded
+    limit = getattr(e, 'description', 'Rate limit exceeded')
+    
+    # Send notification via Telegram
+    send_message(format_game_message(
+        "RATE_LIMIT",
+        f"Rate limit exceeded: {limit}\nIP: {get_remote_address()}"
+    ))
+    
+    return jsonify({
+        "error": "Too many requests",
+        "description": limit
+    }), 429
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "healthy"}), 200
