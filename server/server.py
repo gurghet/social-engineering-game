@@ -26,6 +26,7 @@ def health_check():
     return jsonify({"status": "healthy"}), 200
 
 @app.route('/api/send_email', methods=['POST'])
+@limiter.limit("1000 per day")
 @limiter.limit("1 per second")
 def send_email():
     try:
