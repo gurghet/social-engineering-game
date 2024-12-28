@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-amd64:
+  setup-and-test:  # This must match the job name in e2e-setup.yml
     uses: ./.github/workflows/e2e-setup.yml
     with:
       platform: 'linux/amd64'
@@ -19,8 +19,8 @@ jobs:
       JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
       JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
 
-  release-arm:
-    needs: test-amd64
+  build-and-push:  # This must match the job name in docker-publish.yml
+    needs: setup-and-test
     if: ${{ success() }}
     uses: ./.github/workflows/docker-publish.yml
     with:
