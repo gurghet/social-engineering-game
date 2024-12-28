@@ -1,8 +1,8 @@
-name: Release ARM
+name: Release ARM64
 
 on:
   workflow_run:
-    workflows: ["Tests AMD64"]
+    workflows: ["Tests AMD64"]  # Must match exactly
     types:
       - completed
     branches: ["master"]
