@@ -1,9 +1,10 @@
-name: Release ARM64
+name: Docker Build and Push
 
 on:
   workflow_call:
     inputs:
       platform:
+        description: 'Platform to build for'
         required: true
         type: string
     secrets:
