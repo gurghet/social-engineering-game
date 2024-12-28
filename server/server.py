@@ -151,13 +151,27 @@ def get_available_levels():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start the server')
-    parser.add_argument('--port', type=int, default=23925, help='Port to run the server on')
+    parser.add_argument('--port', type=int, help='Port to run the server on (can also be set via PORT environment variable)')
     args = parser.parse_args()
+
+    # Try to get port from different sources with clear error messages
+    port = None
     
-    # Command line argument takes precedence over environment variable
-    # This maintains compatibility with existing setup while supporting PORT env var
-    port = args.port
-    if port == 23925:  # Only use PORT env var if no port was explicitly specified
-        port = int(os.environ.get('PORT', port))
+    # First try command line argument
+    if args.port is not None:
+        port = args.port
     
-    app.run(debug=True, host='0.0.0.0', port=port)
+    # Then try environment variable
+    if port is None:
+        try:
+            port = int(os.environ.get('PORT', ''))
+        except (ValueError, TypeError):
+            port = None
+    
+    # Finally use default
+    if port is None:
+        port = 23925
+        print(f"No port specified via --port argument or PORT environment variable. Using default port {port}")
+    
+    print(f"Starting server on port {port}")
+    app.run(host='0.0.0.0', port=port)
