@@ -12,7 +12,7 @@ const PhishingGame = () => {
     subject: '',
     body: ''
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
   useEffect(() => {
@@ -22,7 +22,7 @@ const PhishingGame = () => {
   const [hasReadRules, setHasReadRules] = useState(() => {
     return localStorage.getItem('hasReadRules') === 'true';
   });
-  
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const debugParam = urlParams.get('debug');
@@ -30,7 +30,7 @@ const PhishingGame = () => {
     console.log('URL search:', window.location.search);
     setIsDebugMode(debugParam === 'true');
   }, []);
-  
+
   const [gameState, setGameState] = useState({
     supervisorName: 'Mark Davidson',
     supervisorEmail: 'mark.davidson@whitecorp.com',
@@ -88,7 +88,7 @@ const PhishingGame = () => {
 
       const data = await response.json();
       console.log('Response data:', data);  // Debug log
-      
+
       setGameState(prev => ({
         ...prev,
         lastResponse: data.response,
@@ -137,27 +137,27 @@ const PhishingGame = () => {
             Rules
           </button>
         </div>
-        <GameHeader 
-          targetEmail={gameState.targetEmail} 
+        <GameHeader
+          targetEmail={gameState.targetEmail}
           tips={gameState.tips}
           objective={gameState.objective}
         />
-        
-        <EmailComposer 
+
+        <EmailComposer
           emailContent={emailContent}
           setEmailContent={setEmailContent}
           isLoading={isLoading}
           sendEmail={sendEmail}
         />
 
-        <ResponseDisplay 
+        <ResponseDisplay
           response={gameState.lastResponse}
           success={gameState.success}
         />
 
         {isDebugMode && (
           console.log('Debug props:', { securityChecks: gameState.securityChecks, debugInfo: gameState.debugInfo, lastResponse: gameState.lastResponse }),
-          <DebugAnalysis 
+          <DebugAnalysis
             securityChecks={gameState.securityChecks}
             debugInfo={gameState.debugInfo}
             lastResponse={gameState.lastResponse}

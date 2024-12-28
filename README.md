@@ -4,9 +4,11 @@ A text-based game where you play as a hacker attempting to gain access to WhiteC
 
 ## Setup
 
-1. Create a `.env` file in the project root with your OpenAI API key:
+1. Create a `.env` file in the project root with your environment variables:
 ```
-OPENAI_API_KEY=your_api_key_here
+OPENAI_API_KEY_JANET=your_api_key_here
+JANET_SEG_BOT_TOKEN=your_telegram_bot_token
+JANET_SEG_BOT_CHAT_ID=your_telegram_chat_id
 ```
 
 2. Install the required packages:
@@ -17,6 +19,20 @@ pip install -r requirements.txt
 3. Run the game:
 ```bash
 python game.py
+```
+
+To run the server with a custom port:
+```bash
+python server.py --port 8080
+```
+
+To run with Docker Compose:
+```bash
+# Development
+docker compose up
+
+# CI/Testing
+docker compose -f docker-compose.ci.yml up
 ```
 
 ## How to Play

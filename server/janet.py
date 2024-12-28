@@ -1,13 +1,10 @@
 from datetime import datetime
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
+from config import load_env  # This will automatically load the environment variables
 from security_checks import perform_security_checks, format_security_results, SecurityChecker
 from training_data import get_training_prompt
 from levels import game_levels
-
-# Load environment variables
-load_dotenv()
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY_JANET"))

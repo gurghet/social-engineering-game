@@ -3,10 +3,10 @@ from telegram import Bot
 from telegram.error import TelegramError
 import asyncio
 from functools import wraps
-from dotenv import load_dotenv
+from config import load_env
 from datetime import datetime
 
-load_dotenv()
+load_env()
 
 TELEGRAM_BOT_TOKEN = os.getenv("JANET_SEG_BOT_TOKEN")
 CHAT_ID = os.getenv("JANET_SEG_BOT_CHAT_ID")

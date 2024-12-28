@@ -3,14 +3,11 @@ from datetime import datetime
 import argparse
 import json
 from openai import OpenAI
-from dotenv import load_dotenv
+from config import load_env  # This will automatically load the environment variables
 from training_data import get_training_prompt
 from janet import janet
 from security_checks import perform_security_checks, format_security_results
 from telegram_bot import send_message, format_game_message
-
-# Load environment variables
-load_dotenv()
 
 # Configure OpenAI
 api_key = os.getenv("OPENAI_API_KEY_JANET")

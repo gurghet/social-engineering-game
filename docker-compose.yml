@@ -35,7 +35,8 @@ services:
       - app-network
 
   backend:
-    build: ./server
+    build:
+      context: ./server
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
@@ -43,10 +44,10 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=23925"
     environment:
       - FLASK_ENV=production
-      - PORT=23925
       - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
       - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
       - JANET_SEG_BOT_CHAT_ID=${JANET_SEG_BOT_CHAT_ID}
+      - PORT=23925
     volumes:
       - ./server:/app
     networks:

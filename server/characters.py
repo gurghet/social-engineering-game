@@ -1,13 +1,11 @@
 from datetime import datetime
 import os
 from openai import OpenAI
-from dotenv import load_dotenv
+from server.config import load_env
 from security_checks import perform_security_checks, format_security_results
 
-# Load environment variables
-load_dotenv()
-
 # Initialize OpenAI client
+load_env()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY_JANET"))
 
 class Character:

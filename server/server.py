@@ -9,6 +9,7 @@ from telegram_bot import send_message, format_game_message
 from datetime import datetime
 from game import get_janet_response
 from levels import game_levels
+import argparse
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -144,5 +145,7 @@ def get_available_levels():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 23925))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    parser = argparse.ArgumentParser(description='Start the server')
+    parser.add_argument('--port', type=int, default=23925, help='Port to run the server on')
+    args = parser.parse_args()
+    app.run(debug=True, host='0.0.0.0', port=args.port)
