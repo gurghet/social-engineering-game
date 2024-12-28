@@ -10,14 +10,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/e2e-setup.yml
-        with:
-          platform: 'linux/amd64'
-        secrets:
-          OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
-          JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
-          JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
+  test-amd64:
+    uses: ./.github/workflows/e2e-setup.yml
+    with:
+      platform: 'linux/amd64'
+    secrets:
+      OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
+      JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
+      JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
