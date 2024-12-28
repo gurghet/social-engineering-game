@@ -153,4 +153,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start the server')
     parser.add_argument('--port', type=int, default=23925, help='Port to run the server on')
     args = parser.parse_args()
-    app.run(debug=True, host='0.0.0.0', port=args.port)
+    
+    # Command line argument takes precedence over environment variable
+    # This maintains compatibility with existing setup while supporting PORT env var
+    port = args.port
+    if port == 23925:  # Only use PORT env var if no port was explicitly specified
+        port = int(os.environ.get('PORT', port))
+    
+    app.run(debug=True, host='0.0.0.0', port=port)
