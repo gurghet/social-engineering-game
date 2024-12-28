@@ -120,3 +120,9 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache-backend
           mv /tmp/.buildx-cache-backend-new /tmp/.buildx-cache-backend
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          tag_name: v${{ env.BACKEND_VERSION }}
