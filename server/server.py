@@ -15,11 +15,16 @@ import argparse
 app = Flask(__name__)
 CORS(app)
 
+# Configure testing mode
+app.config['TESTING'] = os.environ.get('FLASK_TESTING', 'False').lower() == 'true'
+
 # Initialize rate limiter
 limiter = Limiter(
     get_remote_address,
     app=app,
-    storage_uri="memory://"
+    storage_uri="memory://",
+    default_limits=[],
+    enabled=not app.config['TESTING']  # Disable rate limiting during tests
 )
 
 @app.errorhandler(429)  # HTTP 429 Too Many Requests

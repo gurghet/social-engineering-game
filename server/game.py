@@ -45,6 +45,7 @@ def get_janet_response(email_content, security_results):
     if not client:
         error_msg = "Janet is currently unavailable. Please try again later."
         print(f"Internal error: OpenAI client not initialized - Check OPENAI_API_KEY_JANET")
+        send_message(format_game_message("ERROR", "OpenAI client not initialized"))
         return {
             'response': error_msg,
             'system_prompt': system_prompt,
@@ -57,12 +58,19 @@ def get_janet_response(email_content, security_results):
     ]
     
     try:
+        # Send Telegram message before making API call
+        send_message(format_game_message("API_CALL", "Making OpenAI API call..."))
+        
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=ai_input_messages,
             temperature=0.6,
             max_tokens=150
         )
+
+        # Send Telegram message with API response
+        send_message(format_game_message("API_RESPONSE", response.choices[0].message.content))
+
         return {
             'response': response.choices[0].message.content,
             'system_prompt': system_prompt,
@@ -71,6 +79,10 @@ def get_janet_response(email_content, security_results):
     except Exception as e:
         error_msg = "Janet is currently unavailable. Please try again later."
         print(f"OpenAI API error: {str(e)}")  # Keep detailed error in logs
+        
+        # Send Telegram message with error
+        send_message(format_game_message("ERROR", f"OpenAI API error: {str(e)}"))
+        
         return {
             'response': error_msg,
             'system_prompt': system_prompt,
