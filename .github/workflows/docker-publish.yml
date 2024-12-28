@@ -1,21 +1,24 @@
 name: Release ARM64
 
 on:
-  workflow_run:
-    workflows: ["Tests AMD64"]  # Must match exactly
-    types:
-      - completed
-    branches: ["master"]
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 env:
   REGISTRY: ghcr.io
   FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
   BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
   DOCKER_BUILDKIT: 1
+  PLATFORM: ${{ inputs.platform }}
 
 jobs:
   build-and-push:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -88,7 +91,7 @@ jobs:
         with:
           context: ./frontend
           push: true
-          platforms: linux/arm64
+          platforms: linux/${{ env.PLATFORM }}
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache-frontend
@@ -107,7 +110,7 @@ jobs:
         with:
           context: ./server
           push: true
-          platforms: linux/arm64
+          platforms: linux/${{ env.PLATFORM }}
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache-backend
