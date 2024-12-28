@@ -86,6 +86,9 @@ BACKEND_PORT=8082 npx playwright test
 
 ## Roadmap
 
+- [ ] write frontend test to capture the schema of request response
+- [ ] write backend test to capture the schema of request response
+- [ ] try to make the schemas strict (no unknown fields are tolerated)
 - [ ] Add CAPTCHA to the game
 - [ ] Add more background story
 - [ ] Display progress (intel gathered)
