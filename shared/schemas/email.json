@@ -1,0 +1,73 @@
+{
+  "email_request": {
+    "type": "object",
+    "properties": {
+      "from": {
+        "type": "string",
+        "format": "email",
+        "description": "Sender's email address"
+      },
+      "subject": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Email subject line"
+      },
+      "body": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Email content"
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Whether to return debug information"
+      }
+    },
+    "required": ["from", "subject", "body"],
+    "additionalProperties": false
+  },
+  "email_response": {
+    "type": "object",
+    "properties": {
+      "response": {
+        "type": "string",
+        "description": "Janet's response to the email"
+      },
+      "success": {
+        "type": "boolean",
+        "description": "Whether the phishing attempt was successful"
+      },
+      "securityChecks": {
+        "type": "object",
+        "description": "Results of security checks performed on the email",
+        "properties": {
+          "urgency": {
+            "type": "object",
+            "properties": {
+              "passed": { "type": "boolean" },
+              "name": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          },
+          "from_supervisor": {
+            "type": "object",
+            "properties": {
+              "passed": { "type": "boolean" },
+              "name": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      },
+      "debugInfo": {
+        "type": "object",
+        "description": "Debug information about the email processing",
+        "properties": {
+          "system_prompt": { "type": "string" },
+          "raw_input": { "type": "string" }
+        }
+      }
+    },
+    "required": ["response", "success"],
+    "additionalProperties": false
+  }
+}

@@ -104,14 +104,16 @@ Security Checks:
         # Return response with debug info only if requested
         response_data = {
             'response': response['response'],
-            'securityChecks': janet_security_checks if debug else None,
+            'success': False  # Add success field
+        } if not debug else {
+            'response': response['response'],
+            'success': False,  # Add success field
+            'securityChecks': janet_security_checks,
             'debugInfo': {
                 'email': email_content,
                 'system_prompt': response['system_prompt'],
                 'raw_input': response['raw_input']
-            } if debug else None,
-            'lastResponse': response['response'] if debug else None,
-            'success': False  # Add success field
+            }
         }
         
         # Log the response for debugging
@@ -133,20 +135,22 @@ def get_level_info(level_name):
         return jsonify({"error": "Level not found"}), 404
         
     return jsonify({
-        "name": level.name,
         "objective": level.objective,
-        "character": {
-            "name": level.character["name"],
-            "role": level.character["role"],
-            "email": level.character["email"]
-        }
+        "supervisorName": level.character.get("supervisor_name", "John Smith"),
+        "supervisorEmail": level.character.get("supervisor_email", "supervisor@whitecorp.com"),
+        "targetEmail": level.character["email"],
+        "tips": ["Be careful with sensitive information", "Pay attention to the sender's email"]
     })
 
 @app.route('/api/levels', methods=['GET'])
 def get_available_levels():
     return jsonify({
-        "levels": [{"name": level.name, "objective": level.objective} 
-                  for level in game_levels.levels.values()]
+        "levels": [{
+            "id": level.name,
+            "name": level.name,
+            "description": level.objective,
+            "difficulty": "easy"
+        } for level in game_levels.levels.values()]
     })
 
 if __name__ == '__main__':

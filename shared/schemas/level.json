@@ -1,0 +1,63 @@
+{
+  "level_info": {
+    "type": "object",
+    "properties": {
+      "supervisorName": {
+        "type": "string",
+        "description": "Name of the target's supervisor"
+      },
+      "supervisorEmail": {
+        "type": "string",
+        "format": "email",
+        "description": "Email of the target's supervisor"
+      },
+      "targetEmail": {
+        "type": "string",
+        "format": "email",
+        "description": "Email of the target (Janet)"
+      },
+      "tips": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of tips for the level"
+      },
+      "objective": {
+        "type": "string",
+        "description": "The objective of the current level"
+      }
+    },
+    "required": ["supervisorName", "supervisorEmail", "targetEmail", "tips", "objective"],
+    "additionalProperties": false
+  },
+  "levels_response": {
+    "type": "object",
+    "properties": {
+      "levels": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "difficulty": {
+              "type": "string",
+              "enum": ["easy", "medium", "hard"]
+            }
+          },
+          "required": ["id", "name", "description", "difficulty"]
+        }
+      }
+    },
+    "required": ["levels"],
+    "additionalProperties": false
+  }
+}

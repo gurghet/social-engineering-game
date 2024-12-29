@@ -4,6 +4,10 @@ import os
 import logging
 from unittest.mock import patch, MagicMock
 import json
+import jsonschema
+import pytest
+from flask.testing import FlaskClient
+from jsonschema import validate, FormatChecker
 
 # Configure logging for tests
 logging.basicConfig(
@@ -13,21 +17,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger('test_server')
 
+# Load shared schemas
+with open(os.path.join(os.path.dirname(__file__), '..', 'shared', 'schemas', 'email.json')) as f:
+    email_schemas = json.load(f)
+
+with open(os.path.join(os.path.dirname(__file__), '..', 'shared', 'schemas', 'level.json')) as f:
+    level_schemas = json.load(f)
+
+API_SCHEMAS = {
+    'email_request': email_schemas['email_request'],
+    'email_response': email_schemas['email_response'],
+    'levels_response': level_schemas['levels_response'],
+    'level_info_response': level_schemas['level_info']
+}
+
 def log_test_separator(message):
     """Helper function to print a separator between tests"""
     separator = "=" * 70
     logger.info(f"\n{separator}\n{message}\n{separator}")
-
-# Add the server directory to the Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-# Set testing environment
-os.environ['FLASK_TESTING'] = 'true'
-
-# Import server modules
-from server import app
-from levels import GameLevels, Level
-from security_checks import SecurityChecker, perform_security_checks
 
 class TestServer(unittest.TestCase):
     def setUp(self):
@@ -73,7 +80,7 @@ class TestServer(unittest.TestCase):
         self.janet_patcher.stop()
         self.telegram_patcher.stop()
         logger.info('✓ Test teardown complete\n')
-        
+
     def assertResponseValid(self, response, expected_status):
         """Helper method to validate response"""
         try:
@@ -90,6 +97,20 @@ class TestServer(unittest.TestCase):
             logger.error(f'❌ Error validating response: {str(e)}')
             raise
 
+    def assertSchemaValid(self, instance, schema_name):
+        """Helper method to validate response against schema"""
+        try:
+            jsonschema.validate(
+                instance=instance,
+                schema=API_SCHEMAS[schema_name],
+                format_checker=jsonschema.FormatChecker()
+            )
+            logger.info(f'✓ Schema validation passed for {schema_name}')
+        except jsonschema.exceptions.ValidationError as e:
+            logger.error(f'❌ Schema validation failed for {schema_name}:')
+            logger.error(f'   Error: {str(e)}')
+            raise
+
     def test_health_check(self):
         """Test the health check endpoint returns OK"""
         logger.info('➤ Testing health check endpoint')
@@ -104,12 +125,7 @@ class TestServer(unittest.TestCase):
         response = self.client.get('/api/levels')
         self.assertResponseValid(response, 200)
         data = json.loads(response.data)
-
-        self.assertIn('levels', data)
-        self.assertTrue(isinstance(data['levels'], list))
-        self.assertEqual(len(data['levels']), 1)
-        self.assertEqual(data['levels'][0]['name'], 'janet')
-        self.assertEqual(data['levels'][0]['objective'], 'Test objective')
+        self.assertSchemaValid(data, 'levels_response')
 
     def test_get_specific_level_info(self):
         """Test getting info for a specific level"""
@@ -118,9 +134,7 @@ class TestServer(unittest.TestCase):
         response = self.client.get('/api/level/janet')
         self.assertResponseValid(response, 200)
         data = json.loads(response.data)
-        self.assertEqual(data['name'], 'janet')
-        self.assertEqual(data['objective'], 'Test objective')
-        self.assertEqual(data['character']['name'], 'Janet Thompson')
+        self.assertSchemaValid(data, 'level_info_response')
         
         # Test with non-existent level
         logger.info('➤ Testing nonexistent level')
@@ -183,8 +197,20 @@ class TestServer(unittest.TestCase):
             'body': 'Test Content',
             'debug': True
         }
+        self.assertSchemaValid(email_data, 'email_request')
         response = self.client.post('/api/send_email', json=email_data)
         self.assertResponseValid(response, 200)
+        data = json.loads(response.data)
+        self.assertSchemaValid(data, 'email_response')
+
+        # Test invalid email format
+        invalid_email = {
+            'from': 'not-an-email',  # Invalid email format
+            'subject': 'Test Subject',
+            'body': 'Test Content'
+        }
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            self.assertSchemaValid(invalid_email, 'email_request')
 
         # Test missing fields
         logger.info('➤ Testing email endpoint with missing fields')
@@ -234,6 +260,17 @@ class TestServer(unittest.TestCase):
                 "Please reset your password immediately!"
             )
             self.assertTrue(urgent_results['urgency']['passed'], "Urgency check should pass when urgent keywords are found")
+
+# Add the server directory to the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# Set testing environment
+os.environ['FLASK_TESTING'] = 'true'
+
+# Import server modules
+from server import app
+from levels import GameLevels, Level
+from security_checks import SecurityChecker, perform_security_checks
 
 if __name__ == '__main__':
     unittest.main()

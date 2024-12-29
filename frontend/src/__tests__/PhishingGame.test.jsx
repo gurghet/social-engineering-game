@@ -1,7 +1,9 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import PhishingGame from '../components/PhishingGame';
+import { validateEmailRequest, validateEmailResponse, validateLevelInfo } from '../utils/schemaValidation';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -12,16 +14,22 @@ delete window.location;
 
 describe('PhishingGame Component', () => {
   beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks();
+    
     // Clear mock data before each test
     fetch.mockClear();
 
-    // Mock level info response
+    // Mock successful level info response
+    const mockLevelInfo = {
+      objective: 'Test objective'
+    };
+    validateLevelInfo(mockLevelInfo); // Validate mock data
+    
     fetch.mockImplementationOnce(() => 
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          objective: 'Test objective'
-        })
+        json: () => Promise.resolve(mockLevelInfo)
       })
     );
   });
@@ -35,15 +43,18 @@ describe('PhishingGame Component', () => {
     window.location = { ...originalLocation, search: '' };
 
     // Mock successful email response
+    const mockEmailResponse = {
+      success: true,
+      response: 'Email sent successfully',
+      securityChecks: ['Check passed'],
+      debugInfo: { test: 'info' }
+    };
+    validateEmailResponse(mockEmailResponse); // Validate mock data
+    
     fetch.mockImplementationOnce(() => 
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          success: true,
-          response: 'Email sent successfully',
-          securityChecks: ['Check passed'],
-          debugInfo: { test: 'info' }
-        })
+        json: () => Promise.resolve(mockEmailResponse)
       })
     );
 
@@ -57,9 +68,16 @@ describe('PhishingGame Component', () => {
     const sendButton = container.querySelector('#email-composer-send-button');
 
     // Fill form
-    await userEvent.type(fromInput, 'test@example.com');
-    await userEvent.type(subjectInput, 'Test Subject');
-    await userEvent.type(contentInput, 'Test Content');
+    const validEmailData = {
+      from: 'test@example.com',
+      subject: 'Test Subject',
+      body: 'Test Content'
+    };
+    validateEmailRequest(validEmailData); // Validate test data
+    
+    await userEvent.type(fromInput, validEmailData.from);
+    await userEvent.type(subjectInput, validEmailData.subject);
+    await userEvent.type(contentInput, validEmailData.body);
 
     // Submit form
     await userEvent.click(sendButton);
@@ -93,25 +111,28 @@ describe('PhishingGame Component', () => {
     window.location = { ...originalLocation, search: '?debug=true' };
 
     // Mock successful email response with debug info
+    const mockEmailResponse = {
+      success: true,
+      response: 'Email sent successfully',
+      securityChecks: {
+        'test-check': {
+          name: 'Test Check',
+          description: 'A test security check',
+          passed: true
+        }
+      },
+      debugInfo: {
+        email: 'test@example.com',
+        raw_input: 'Test AI prompt',
+        raw_output: 'Test raw output'
+      }
+    };
+    validateEmailResponse(mockEmailResponse); // Validate mock data
+    
     fetch.mockImplementationOnce(() => 
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({
-          success: true,
-          response: 'Email sent successfully',
-          securityChecks: {
-            'test-check': {
-              name: 'Test Check',
-              description: 'A test security check',
-              passed: true
-            }
-          },
-          debugInfo: {
-            email: 'test@example.com',
-            raw_input: 'Test AI prompt',
-            raw_output: 'Test raw output'
-          }
-        })
+        json: () => Promise.resolve(mockEmailResponse)
       })
     );
 
@@ -128,9 +149,16 @@ describe('PhishingGame Component', () => {
     const contentInput = container.querySelector('#email-composer-content');
     const sendButton = container.querySelector('#email-composer-send-button');
 
-    await userEvent.type(fromInput, 'test@example.com');
-    await userEvent.type(subjectInput, 'Test Subject');
-    await userEvent.type(contentInput, 'Test Content');
+    const validEmailData = {
+      from: 'test@example.com',
+      subject: 'Test Subject',
+      body: 'Test Content'
+    };
+    validateEmailRequest(validEmailData); // Validate test data
+    
+    await userEvent.type(fromInput, validEmailData.from);
+    await userEvent.type(subjectInput, validEmailData.subject);
+    await userEvent.type(contentInput, validEmailData.body);
     await userEvent.click(sendButton);
 
     // Debug card should appear after sending email
@@ -159,6 +187,12 @@ describe('PhishingGame Component', () => {
     window.location = { ...originalLocation, search: '' };
 
     // Mock error response
+    const mockErrorResponse = {
+      status: 500,
+      statusText: 'Internal Server Error'
+    };
+    validateEmailResponse(mockErrorResponse); // Validate mock data
+    
     fetch.mockImplementationOnce(() => 
       Promise.resolve({
         ok: false,
@@ -175,9 +209,16 @@ describe('PhishingGame Component', () => {
     const contentInput = container.querySelector('#email-composer-content');
     const sendButton = container.querySelector('#email-composer-send-button');
 
-    await userEvent.type(fromInput, 'test@example.com');
-    await userEvent.type(subjectInput, 'Test Subject');
-    await userEvent.type(contentInput, 'Test Content');
+    const validEmailData = {
+      from: 'test@example.com',
+      subject: 'Test Subject',
+      body: 'Test Content'
+    };
+    validateEmailRequest(validEmailData); // Validate test data
+    
+    await userEvent.type(fromInput, validEmailData.from);
+    await userEvent.type(subjectInput, validEmailData.subject);
+    await userEvent.type(contentInput, validEmailData.body);
     await userEvent.click(sendButton);
 
     // Check error message
@@ -198,9 +239,16 @@ describe('PhishingGame Component', () => {
     const contentInput = container.querySelector('#email-composer-content');
     const sendButton = container.querySelector('#email-composer-send-button');
 
-    await userEvent.type(fromInput, 'test@example.com');
-    await userEvent.type(subjectInput, 'Test Subject');
-    await userEvent.type(contentInput, 'Test Content');
+    const validEmailData = {
+      from: 'test@example.com',
+      subject: 'Test Subject',
+      body: 'Test Content'
+    };
+    validateEmailRequest(validEmailData); // Validate test data
+    
+    await userEvent.type(fromInput, validEmailData.from);
+    await userEvent.type(subjectInput, validEmailData.subject);
+    await userEvent.type(contentInput, validEmailData.body);
     await userEvent.click(sendButton);
 
     // Check error message
@@ -264,9 +312,16 @@ describe('PhishingGame Component', () => {
     const contentInput = container.querySelector('#email-composer-content');
     const sendButton = container.querySelector('#email-composer-send-button');
 
-    await userEvent.type(fromInput, 'test@example.com');
-    await userEvent.type(subjectInput, 'Test Subject');
-    await userEvent.type(contentInput, 'Test Content');
+    const validEmailData = {
+      from: 'test@example.com',
+      subject: 'Test Subject',
+      body: 'Test Content'
+    };
+    validateEmailRequest(validEmailData); // Validate test data
+    
+    await userEvent.type(fromInput, validEmailData.from);
+    await userEvent.type(subjectInput, validEmailData.subject);
+    await userEvent.type(contentInput, validEmailData.body);
     
     await userEvent.click(sendButton);
 
