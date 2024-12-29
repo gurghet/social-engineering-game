@@ -45,10 +45,29 @@ else
     echo -e "${RED}Warning: requirements.txt not found${NC}"
 fi
 
-# Build and start Docker containers
+# Run server tests
+echo -e "\n=== Server Tests ==="
+run_test "Server Tests" "python3 -m pytest -v" || ((errors++))
 cd ..
+
+# Run frontend tests
+echo -e "\n=== Frontend Tests ==="
+cd frontend
+if [ -f "package.json" ]; then
+    # Install dependencies if needed
+    if [ ! -d "node_modules" ]; then
+        echo "Installing frontend dependencies..."
+        npm ci
+    fi
+    run_test "Frontend Tests" "npm test" || ((errors++))
+else
+    echo "Frontend directory exists but no package.json found. Skipping..."
+fi
+cd ..
+
+# Build and start Docker containers
 echo "Building and starting Docker containers..."
-docker compose -f docker-compose.ci.yml up --build -d
+docker compose up --build -d
 
 # Wait for services to be ready
 echo "Waiting for services to be ready..."
@@ -68,9 +87,9 @@ if [ -d "e2e" ]; then
         # Install dependencies if needed
         if [ ! -d "node_modules" ]; then
             echo "Installing E2E test dependencies..."
-            npm install
+            npm ci
         fi
-        run_test "E2E Tests" "npx playwright test" || ((errors++))
+        run_test "E2E Tests" "npm test" || ((errors++))
     else
         echo "E2E tests directory exists but no package.json found. Skipping..."
     fi
@@ -80,7 +99,7 @@ fi
 # Clean up
 echo -e "\n=== Cleanup ==="
 echo "Stopping Docker containers..."
-docker compose -f docker-compose.ci.yml down
+docker compose down
 
 # Deactivate Python virtual environment
 deactivate

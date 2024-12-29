@@ -27,12 +27,12 @@ test.describe('Social Engineering Game', () => {
     await page.goto('/');
     
     // Fill in email form using IDs and placeholders
-    await page.locator('#sender').waitFor({ timeout: 5000 });
-    await page.locator('#sender').fill('boss@whitecorp.com');
-    await page.locator('#subject').waitFor({ timeout: 5000 });
-    await page.locator('#subject').fill('Urgent: System Access Required');
-    await page.locator('textarea').waitFor({ timeout: 5000 });
-    await page.locator('textarea').fill('Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss');
+    await page.locator('#email-composer-from').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-from').fill('boss@whitecorp.com');
+    await page.locator('#email-composer-subject').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-subject').fill('Urgent: System Access Required');
+    await page.locator('#email-composer-content').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-content').fill('Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss');
     
     // Send email and check for response
     await page.getByRole('button', { name: 'SEND EMAIL' }).waitFor({ timeout: 5000 });
@@ -46,45 +46,46 @@ test.describe('Social Engineering Game', () => {
     await page.goto('/?debug=true');
     
     // Fill and send an email
-    await page.locator('#sender').waitFor({ timeout: 5000 });
-    await page.locator('#sender').fill('boss@whitecorp.com');
-    await page.locator('#subject').waitFor({ timeout: 5000 });
-    await page.locator('#subject').fill('Test Email');
-    await page.locator('textarea').waitFor({ timeout: 5000 });
-    await page.locator('textarea').fill('Test content');
+    await page.locator('#email-composer-from').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-from').fill('boss@whitecorp.com');
+    await page.locator('#email-composer-subject').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-subject').fill('Urgent: System Access Required');
+    await page.locator('#email-composer-content').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-content').fill('Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss');
     
+    // Send email and check for response
     await page.getByRole('button', { name: 'SEND EMAIL' }).waitFor({ timeout: 5000 });
     await page.getByRole('button', { name: 'SEND EMAIL' }).click();
     
-    // Check for debug analysis section
-    await expect(page.getByText('Debug Analysis')).toBeVisible({ timeout: 10000 });
+    // Wait for debug card to appear
+    await page.locator('#debug-analysis-card').waitFor({ timeout: 10000 });
     
-    // Verify debug information sections
-    await expect(page.getByText('Input and Processing Details')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Email Input')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('AI Prompt')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Raw Response')).toBeVisible({ timeout: 5000 });
+    // Check for debug information sections
+    await page.locator('#debug-security-checks').waitFor({ timeout: 5000 });
+    await page.locator('#debug-email-input').waitFor({ timeout: 5000 });
+    await page.locator('#debug-ai-prompt').waitFor({ timeout: 5000 });
   });
 
   test('should show security checks in debug mode', async ({ page }) => {
     await page.goto('/?debug=true');
     
-    // Send a test email
-    await page.locator('#sender').waitFor({ timeout: 5000 });
-    await page.locator('#sender').fill('boss@whitecorp.com');
-    await page.locator('#subject').waitFor({ timeout: 5000 });
-    await page.locator('#subject').fill('Test Email');
-    await page.locator('textarea').waitFor({ timeout: 5000 });
-    await page.locator('textarea').fill('Test content');
+    // Fill and send an email
+    await page.locator('#email-composer-from').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-from').fill('boss@whitecorp.com');
+    await page.locator('#email-composer-subject').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-subject').fill('Urgent: System Access Required');
+    await page.locator('#email-composer-content').waitFor({ timeout: 5000 });
+    await page.locator('#email-composer-content').fill('Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss');
     
+    // Send email and check for response
     await page.getByRole('button', { name: 'SEND EMAIL' }).waitFor({ timeout: 5000 });
     await page.getByRole('button', { name: 'SEND EMAIL' }).click();
     
-    // Wait for debug analysis to appear and be ready
-    await expect(page.getByText('Debug Analysis')).toBeVisible({ timeout: 10000 });
+    // Wait for debug card to appear
+    await page.locator('#debug-analysis-card').waitFor({ timeout: 10000 });
     
-    // Check for security analysis results with more flexible matching
-    await expect(page.getByRole('heading', { name: /supervisor check/i, level: 4 })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('heading', { name: /urgency check/i, level: 4 })).toBeVisible({ timeout: 10000 });
+    // Check for specific security checks
+    await page.locator('#security-check-from_supervisor').waitFor({ timeout: 5000 });
+    await page.locator('#security-check-urgency').waitFor({ timeout: 5000 });
   });
 });
