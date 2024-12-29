@@ -10,7 +10,52 @@ on:
       - 'docs/**'
 
 jobs:
-  test:
+  server-tests:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
+      JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
+      JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r server/requirements.txt
+          
+      - name: Run server tests
+        run: |
+          cd server
+          python -m unittest discover
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+
+  e2e-tests:
+    needs: [server-tests, frontend-tests]
     uses: ./.github/workflows/e2e-setup.yml
     with:
       platform: 'linux/amd64'  # Only test AMD64 for PRs

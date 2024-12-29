@@ -6,7 +6,7 @@ const DebugAnalysis = ({ securityChecks, debugInfo, lastResponse }) => {
   if (!securityChecks) return null;
 
   return (
-    <Card className="mb-6 bg-gray-900 border border-emerald-400/20 shadow-lg shadow-emerald-400/10">
+    <Card id="debug-analysis-card" className="mb-6 bg-gray-900 border border-emerald-400/20 shadow-lg shadow-emerald-400/10">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-emerald-400">
           <Bug className="w-6 h-6" />
@@ -15,9 +15,9 @@ const DebugAnalysis = ({ securityChecks, debugInfo, lastResponse }) => {
       </CardHeader>
       <CardContent>
         <div className="bg-gray-800 p-4 rounded border border-emerald-400/20">
-          <div className="space-y-4">
+          <div id="debug-security-checks" className="space-y-4">
             {Object.entries(securityChecks || {}).map(([key, check]) => (
-              <div key={key} className="flex items-start gap-3">
+              <div key={key} id={`security-check-${key}`} className="flex items-start gap-3">
                 {check.passed ? 
                   <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" /> :
                   <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -41,19 +41,19 @@ const DebugAnalysis = ({ securityChecks, debugInfo, lastResponse }) => {
             <div className="space-y-6 font-mono text-sm">
               <div>
                 <h5 className="text-emerald-400 mb-2">Email Input</h5>
-                <pre className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
+                <pre id="debug-email-input" className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
                   <code className="text-gray-300">{debugInfo?.email || 'No email sent yet'}</code>
                 </pre>
               </div>
               <div>
                 <h5 className="text-emerald-400 mb-2">AI Prompt</h5>
-                <pre className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
+                <pre id="debug-ai-prompt" className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
                   <code className="text-gray-300">{debugInfo?.raw_input || 'No prompt generated yet'}</code>
                 </pre>
               </div>
               <div>
                 <h5 className="text-emerald-400 mb-2">Raw Response</h5>
-                <pre className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
+                <pre id="debug-raw-response" className="bg-gray-900 p-3 rounded overflow-auto max-h-48">
                   <code className="text-gray-300">{lastResponse || 'No response yet'}</code>
                 </pre>
               </div>

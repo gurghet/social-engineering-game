@@ -23,7 +23,7 @@ const EmailComposer = ({ emailContent, setEmailContent, isLoading, sendEmail }) 
             <label className="block text-sm font-medium mb-1 text-emerald-400">FROM:</label>
             <input
               type="search"
-              id="sender"
+              id="email-composer-from"
               name="phishgame_sender_field"
               autoComplete="off"
               className="w-full p-2 rounded bg-gray-800 border border-emerald-400/20 text-gray-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 placeholder-gray-500"
@@ -36,7 +36,7 @@ const EmailComposer = ({ emailContent, setEmailContent, isLoading, sendEmail }) 
             <label className="block text-sm font-medium mb-1 text-emerald-400">SUBJECT:</label>
             <input
               type="search"
-              id="subject"
+              id="email-composer-subject"
               name="phishgame_subject_field"
               autoComplete="off"
               className="w-full p-2 rounded bg-gray-800 border border-emerald-400/20 text-gray-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 placeholder-gray-500"
@@ -48,6 +48,7 @@ const EmailComposer = ({ emailContent, setEmailContent, isLoading, sendEmail }) 
           <div>
             <label className="block text-sm font-medium mb-1 text-emerald-400">CONTENT:</label>
             <textarea
+              id="email-composer-content"
               className="w-full p-2 rounded bg-gray-800 border border-emerald-400/20 text-gray-200 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 h-32 placeholder-gray-500"
               value={emailContent.body}
               onChange={(e) => setEmailContent(prev => ({...prev, body: e.target.value}))}
@@ -55,6 +56,7 @@ const EmailComposer = ({ emailContent, setEmailContent, isLoading, sendEmail }) 
             />
           </div>
           <button
+            id="email-composer-send-button"
             className="w-full bg-emerald-400/20 text-emerald-400 py-2 rounded hover:bg-emerald-400/30 transition-colors border border-emerald-400/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             onClick={sendEmail}
             disabled={isLoading || !isFormValid()}

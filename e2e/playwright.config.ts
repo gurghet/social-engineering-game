@@ -24,7 +24,7 @@ export default defineConfig({
     },
   ],
   webServer: process.env.CI ? undefined : {
-    command: 'docker compose up',
+    command: 'docker compose up --build',
     url: 'http://localhost',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,

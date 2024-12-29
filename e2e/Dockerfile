@@ -12,8 +12,5 @@ RUN npm install
 COPY tests ./tests
 COPY playwright.config.ts ./
 
-# Install Playwright browsers with dependencies
-RUN npx playwright install --with-deps chromium
-
 # Keep container running for docker-compose
 CMD ["tail", "-f", "/dev/null"]
