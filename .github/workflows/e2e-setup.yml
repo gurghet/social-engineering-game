@@ -164,17 +164,21 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: playwright-report
+        name: playwright-results
         path: |
           e2e/playwright-report/
           e2e/test-results/
         retention-days: 30
+        overwrite: true  # In case of retries
+        include-hidden-files: true  # To ensure we capture all test artifacts
 
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report
         path: e2e/playwright-report/
+        overwrite: true  # In case of retries
+        include-hidden-files: true  # To ensure we capture all report files
         retention-days: 30
 
     - name: Cleanup old caches
