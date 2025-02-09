@@ -4,7 +4,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from janet import janet
 import os
-from security_checks import SecurityChecker, perform_security_checks
+from security_checks import perform_security_checks
 from telegram_bot import send_message, format_game_message
 from datetime import datetime
 from game import get_janet_response
@@ -104,10 +104,10 @@ Security Checks:
         # Return response with debug info only if requested
         response_data = {
             'response': response['response'],
-            'success': False  # Add success field
+            'success': False
         } if not debug else {
             'response': response['response'],
-            'success': False,  # Add success field
+            'success': False,
             'securityChecks': janet_security_checks,
             'debugInfo': {
                 'email': email_content,

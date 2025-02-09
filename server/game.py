@@ -4,7 +4,6 @@ import argparse
 import json
 from openai import OpenAI
 from config import load_env  # This will automatically load the environment variables
-from training_data import get_training_prompt
 from janet import janet
 from security_checks import perform_security_checks, format_security_results
 from telegram_bot import send_message, format_game_message
@@ -31,7 +30,7 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 """
 
 def get_janet_response(email_content, security_results):
-    system_prompt = get_training_prompt(janet)
+    system_prompt = janet.get_training_prompt()
     game_turn_content = f"""
     Player sent the following email:
     {email_content}

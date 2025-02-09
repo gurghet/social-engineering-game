@@ -17,49 +17,29 @@ JANET_SEG_BOT_TOKEN=your_telegram_bot_token
 JANET_SEG_BOT_CHAT_ID=your_telegram_chat_id
 ```
 
-2. You can run the game in two ways:
+2. Run the game in one of these ways:
 
 ### Using Docker (Recommended)
 ```bash
 # Development mode
 docker compose up
-```
-Development mode ports:
-- Frontend: http://localhost:80
-- Backend API: http://localhost:80/api
-- Traefik Dashboard: http://localhost:8080
-- Alternative Backend Port: http://localhost:8082/api
 
-```bash
 # CI/Testing mode
 docker compose -f docker-compose.ci.yml up
 ```
-CI/Testing mode ports:
-- Frontend: http://localhost:80
-- Backend API: http://localhost:80/api
 
 ### Manual Setup
-1. Install the required packages:
 ```bash
+# Backend
 cd server
 pip install -r requirements.txt
-```
-
-Required packages:
-- Flask 3.0.0
-- Flask-CORS 4.0.0
-- OpenAI 1.3.9
-- python-dotenv 1.0.0
-- httpx ≥0.25.2
-- Flask-Limiter 3.5.0
-- python-telegram-bot 20.7
-
-2. Run the server:
-```bash
 python server.py
+
+# Frontend (in another terminal)
+cd frontend
+npm install
+npm run dev
 ```
-Default ports for manual setup:
-- Backend API: http://localhost:8080
 
 ## How to Play
 
@@ -97,3 +77,76 @@ BACKEND_PORT=8082 npx playwright test
 ## Note
 
 This is an educational game designed to demonstrate social engineering techniques. Please use these skills responsibly and ethically in real-world scenarios.
+
+## Appendix: All Run Methods
+
+### 1. Raw Development Setup
+Run backend and frontend separately in development mode:
+
+```bash
+# Terminal 1 - Backend
+cd server
+pip install -r requirements.txt
+python server.py  # Runs on http://localhost:23925
+
+# Terminal 2 - Frontend
+cd frontend
+npm install
+npm run dev      # Runs on http://localhost:5173
+```
+
+Required environment variables in `.env`:
+```
+OPENAI_API_KEY_JANET=your_api_key_here
+JANET_SEG_BOT_TOKEN=your_telegram_bot_token
+JANET_SEG_BOT_CHAT_ID=your_telegram_chat_id
+```
+
+### 2. Docker Development Setup
+Run the entire application stack with Traefik routing:
+
+```bash
+docker compose up
+```
+
+Available endpoints:
+- Frontend (production build): http://localhost:80
+- Backend API: http://localhost:80/api
+  - GET /api/health - Health check
+  - GET /api/levels - List available levels
+  - POST /api/send_email - Send email to Janet
+- Traefik dashboard: http://localhost:8080
+- Alternative endpoint: http://localhost:8082
+
+Required environment variables in `.env` (same as raw setup):
+```
+OPENAI_API_KEY_JANET=your_api_key_here
+JANET_SEG_BOT_TOKEN=your_telegram_bot_token
+JANET_SEG_BOT_CHAT_ID=your_telegram_chat_id
+```
+
+### 3. CI/Testing Setup
+Run the application stack in CI/Testing mode with debug enabled:
+
+```bash
+docker compose -f docker-compose.ci.yml up
+```
+
+Available endpoints:
+- Frontend (production build): http://localhost:80
+- Backend API: http://localhost:80/api
+  - GET /api/health - Health check
+  - GET /api/levels - List available levels
+  - POST /api/send_email - Send email to Janet (debug mode enabled)
+- Traefik dashboard: http://localhost:8080
+
+Key differences from development setup:
+- Backend runs in debug mode with more detailed API responses
+- Backend uses port 8080 internally (but still accessible via port 80 through Traefik)
+- Native ARM64 support for Apple Silicon (M1/M2/M3)
+
+Required environment variables in `.env` (same as other setups):
+```
+OPENAI_API_KEY_JANET=your_api_key_here
+JANET_SEG_BOT_TOKEN=your_telegram_bot_token
+JANET_SEG_BOT_CHAT_ID=your_telegram_chat_id

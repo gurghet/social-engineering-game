@@ -222,7 +222,7 @@ class TestServer(unittest.TestCase):
         logger.info('➤ Testing security checks')
         
         # Create a mock SecurityChecker
-        with patch('server.SecurityChecker') as mock_checker_class:
+        with patch('security_checks.SecurityChecker') as mock_checker_class:
             mock_checker = MagicMock()
             mock_checker_class.return_value = mock_checker
             

@@ -81,7 +81,6 @@ def contains_urgent_keywords(text):
 class SecurityChecker:
     def __init__(self, supervisor_email):
         self.supervisor_email = supervisor_email
-        self.last_checks = None
     
     def analyze_email(self, from_address, subject, content):
         """Analyze an email for security risks"""
@@ -97,12 +96,7 @@ class SecurityChecker:
                 'description': 'Checks for urgent or time-pressuring language'
             }
         }
-        self.last_checks = checks
         return checks
-
-    def get_last_checks(self):
-        """Return the results of the last security check"""
-        return self.last_checks
 
 def perform_security_checks(email_data, supervisor_email):
     checker = SecurityChecker(supervisor_email)

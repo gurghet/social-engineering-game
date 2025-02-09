@@ -17,12 +17,10 @@ class Janet:
         self.email = level.character["email"]
         self.last_prompt = None
         self.last_raw_response = None
-        self.level_passwords = {1: level.password}
         self.security_checker = SecurityChecker(self.supervisor_email)
         self.role = level.character["role"]
         self.personality = level.character["personality"]
         self.knowledge = {
-            "mainframe_password": level.password,
             "email": level.character["email"],
             "role": level.character["role"],
             "department": level.character["department"],
@@ -142,10 +140,6 @@ Best regards,
 
     def get_last_raw_response(self):
         return self.last_raw_response
-
-    def get_level_passwords(self):
-        """Return list of valid passwords for all levels"""
-        return list(self.level_passwords.values())
 
 # Create a single instance of Janet
 janet = Janet()
