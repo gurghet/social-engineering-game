@@ -1,4 +1,4 @@
-name: Tests AMD64
+name: Tests ARM64
 
 on:
   push:
@@ -62,7 +62,7 @@ jobs:
     needs: [server-tests, frontend-tests]
     uses: ./.github/workflows/e2e-setup.yml
     with:
-      platform: 'linux/amd64'
+      platform: 'linux/arm64'
     secrets:
       OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
       JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
