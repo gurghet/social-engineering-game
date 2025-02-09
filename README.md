@@ -69,6 +69,7 @@ BACKEND_PORT=8082 npx playwright test
 - [x] write frontend test to capture the schema of request response
 - [x] write backend test to capture the schema of request response
 - [x] try to make the schemas strict (no unknown fields are tolerated)
+- [ ] Add second level called Derek (from the name of the character we'll send emails to)
 - [ ] Add CAPTCHA to the game
 - [ ] Add more background story
 - [ ] Display progress (intel gathered)

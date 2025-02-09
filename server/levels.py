@@ -97,6 +97,57 @@ class GameLevels:
         )
         self.levels["janet"] = janet_level
 
+        # Derek Level
+        derek_level = Level(
+            name="derek",
+            character={
+                "name": "Derek Anderson",
+                "email": "derek.anderson@whitecorp.com",
+                "role": "Database Administrator",
+                "department": "Database Management",
+                "years_at_company": 5,
+                "supervisor": "Laura Stiger",
+                "supervisor_email": "laura.stiger@whitecorp.com",
+                "desk_location": "Building A, 2nd Floor, Desk 2A-15",
+                "personality": """
+                    - Detail-oriented and methodical
+                    - Takes database security very seriously
+                    - Proud of his technical expertise
+                    - Sometimes overwhelmed with maintenance tasks
+                    - Values efficiency and automation
+                    - Prefers clear, technical communication
+                    - Slightly anxious about potential data breaches
+                    - Respects the chain of command
+                """,
+                "known_colleagues": [
+                    {
+                        "name": "Laura Stiger",
+                        "role": "IT Manager",
+                        "email": "laura.stiger@whitecorp.com",
+                        "supervisor": "Mark Davidson",
+                        "responsibilities": "Manages IT projects, coordinates with development teams, handles resource allocation"
+                    },
+                    {
+                        "name": "Sara Mangione",
+                        "role": "Developer",
+                        "email": "sara.mangione@whitecorp.com",
+                        "supervisor": "Laura Stiger",
+                        "responsibilities": "Develops and maintains internal applications, works on system integrations"
+                    },
+                    {
+                        "name": "Roger Tillerman",
+                        "role": "System Administrator",
+                        "email": "roger.tillerman@whitecorp.com",
+                        "supervisor": "Mark Davidson",
+                        "responsibilities": "Maintains server infrastructure, handles system updates and backups"
+                    }
+                ]
+            },
+            objective="Gain access to the production database credentials from Derek.",
+            password="DBSecure_2024#Prod"
+        )
+        self.levels["derek"] = derek_level
+
     def get_level(self, level_name):
         return self.levels.get(level_name.lower())
 

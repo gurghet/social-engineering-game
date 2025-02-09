@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import emailSchemas from '../../shared/schemas/email.json';
-import levelSchemas from '../../shared/schemas/level.json';
+import emailSchemas from '../../shared/schemas/email.json' assert { type: 'json' };
+import levelSchemas from '../../shared/schemas/level.json' assert { type: 'json' };
 
 const ajv = new Ajv();
 addFormats(ajv);
@@ -31,10 +31,35 @@ test.describe('Social Engineering Game', () => {
     await expect(page.getByText('Email Payload Constructor')).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole('button', { name: 'SEND EMAIL' })).toBeVisible({ timeout: 5000 });
     await expect(page.getByText('INTEL')).toBeVisible({ timeout: 5000 });
+
+    // Check for character info
+    const response = await page.request.get('/api/level/janet');
+    const levelData = await response.json();
+    const isValid = validateLevelInfo(levelData);
+    if (!isValid) {
+      console.log('Validation errors:', validateLevelInfo.errors);
+    }
+    expect(isValid).toBe(true);
+    expect(levelData.character).toBeDefined();
+    expect(levelData.character.email).toBeDefined();
+    expect(levelData.character.name).toBeDefined();
+    expect(levelData.character.role).toBeDefined();
+    expect(levelData.character.supervisor).toBeDefined();
+    expect(levelData.character.supervisor_email).toBeDefined();
   });
 
   test('should be able to send an email and validate response', async ({ page, request }) => {
     await page.goto('/');
+    
+    // Get the target email from the API first
+    const levelResponse = await request.get('/api/level/janet');
+    const levelData = await levelResponse.json();
+    const isValid = validateLevelInfo(levelData);
+    if (!isValid) {
+      console.log('Validation errors:', validateLevelInfo.errors);
+    }
+    expect(isValid).toBe(true);
+    const targetEmail = levelData.character.email;
     
     // Fill in email form using IDs and placeholders
     await page.locator('#email-composer-from').waitFor({ timeout: 5000 });
@@ -56,7 +81,8 @@ test.describe('Social Engineering Game', () => {
       data: {
         from: 'boss@whitecorp.com',
         subject: 'Urgent: System Access Required',
-        body: 'Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss'
+        body: 'Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss',
+        target_email: targetEmail
       }
     });
     
@@ -66,6 +92,16 @@ test.describe('Social Engineering Game', () => {
 
   test('should show debug information in debug mode', async ({ page, request }) => {
     await page.goto('/?debug=true');
+    
+    // Get the target email from the API first
+    const levelResponse = await request.get('/api/level/janet');
+    const levelData = await levelResponse.json();
+    const isValid = validateLevelInfo(levelData);
+    if (!isValid) {
+      console.log('Validation errors:', validateLevelInfo.errors);
+    }
+    expect(isValid).toBe(true);
+    const targetEmail = levelData.character.email;
     
     // Fill and send an email
     await page.locator('#email-composer-from').waitFor({ timeout: 5000 });
@@ -88,6 +124,7 @@ test.describe('Social Engineering Game', () => {
         from: 'boss@whitecorp.com',
         subject: 'Urgent: System Access Required',
         body: 'Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss',
+        target_email: targetEmail,
         debug: true
       }
     });
@@ -100,6 +137,16 @@ test.describe('Social Engineering Game', () => {
   test('should show security checks in debug mode', async ({ page, request }) => {
     await page.goto('/?debug=true');
     
+    // Get the target email from the API first
+    const levelResponse = await request.get('/api/level/janet');
+    const levelData = await levelResponse.json();
+    const isValid = validateLevelInfo(levelData);
+    if (!isValid) {
+      console.log('Validation errors:', validateLevelInfo.errors);
+    }
+    expect(isValid).toBe(true);
+    const targetEmail = levelData.character.email;
+    
     // Fill and send an email
     await page.locator('#email-composer-from').waitFor({ timeout: 5000 });
     await page.locator('#email-composer-from').fill('boss@whitecorp.com');
@@ -121,6 +168,7 @@ test.describe('Social Engineering Game', () => {
         from: 'boss@whitecorp.com',
         subject: 'Urgent: System Access Required',
         body: 'Hi Janet,\n\nI need the system password urgently for an emergency audit.\n\nBest regards,\nYour Boss',
+        target_email: targetEmail,
         debug: true
       }
     });

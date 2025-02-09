@@ -20,9 +20,27 @@ describe('PhishingGame Component', () => {
     // Clear mock data before each test
     fetch.mockClear();
 
-    // Mock successful level info response
+    // Mock successful level info response with full character data
     const mockLevelInfo = {
-      objective: 'Test objective'
+      objective: 'Test objective',
+      character: {
+        name: 'Test User',
+        email: 'test.user@whitecorp.com',
+        role: 'Test Role',
+        supervisor: 'Test Supervisor',
+        supervisor_email: 'supervisor@whitecorp.com',
+        personality: 'Test personality traits',
+        known_colleagues: [
+          {
+            name: 'Colleague 1',
+            role: 'Role 1',
+            email: 'colleague1@whitecorp.com',
+            supervisor: 'Test Supervisor',
+            responsibilities: 'Test responsibilities'
+          }
+        ]
+      },
+      tips: ['Tip 1', 'Tip 2']
     };
     validateLevelInfo(mockLevelInfo); // Validate mock data
     
@@ -71,7 +89,8 @@ describe('PhishingGame Component', () => {
     const validEmailData = {
       from: 'test@example.com',
       subject: 'Test Subject',
-      body: 'Test Content'
+      body: 'Test Content',
+      target_email: 'test.user@whitecorp.com'
     };
     validateEmailRequest(validEmailData); // Validate test data
     
@@ -91,18 +110,13 @@ describe('PhishingGame Component', () => {
 
     // Verify fetch was called correctly
     expect(fetch).toHaveBeenCalledTimes(2); // Once for level info, once for email
-    expect(fetch.mock.calls[1][1]).toEqual({
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'test@example.com',
-        subject: 'Test Subject',
-        body: 'Test Content',
-        target_email: 'janet.thompson@whitecorp.com',
-        debug: false
-      })
+    const emailRequestBody = JSON.parse(fetch.mock.calls[1][1].body);
+    expect(emailRequestBody).toEqual({
+      from: 'test@example.com',
+      subject: 'Test Subject',
+      body: 'Test Content',
+      target_email: 'test.user@whitecorp.com',
+      debug: false
     });
   });
 
@@ -152,7 +166,8 @@ describe('PhishingGame Component', () => {
     const validEmailData = {
       from: 'test@example.com',
       subject: 'Test Subject',
-      body: 'Test Content'
+      body: 'Test Content',
+      target_email: 'test.user@whitecorp.com'
     };
     validateEmailRequest(validEmailData); // Validate test data
     
@@ -212,7 +227,8 @@ describe('PhishingGame Component', () => {
     const validEmailData = {
       from: 'test@example.com',
       subject: 'Test Subject',
-      body: 'Test Content'
+      body: 'Test Content',
+      target_email: 'test.user@whitecorp.com'
     };
     validateEmailRequest(validEmailData); // Validate test data
     
@@ -242,7 +258,8 @@ describe('PhishingGame Component', () => {
     const validEmailData = {
       from: 'test@example.com',
       subject: 'Test Subject',
-      body: 'Test Content'
+      body: 'Test Content',
+      target_email: 'test.user@whitecorp.com'
     };
     validateEmailRequest(validEmailData); // Validate test data
     
@@ -315,7 +332,8 @@ describe('PhishingGame Component', () => {
     const validEmailData = {
       from: 'test@example.com',
       subject: 'Test Subject',
-      body: 'Test Content'
+      body: 'Test Content',
+      target_email: 'test.user@whitecorp.com'
     };
     validateEmailRequest(validEmailData); // Validate test data
     

@@ -32,9 +32,14 @@ const PhishingGame = () => {
   }, []);
 
   const [gameState, setGameState] = useState({
-    supervisorName: 'Mark Davidson',
-    supervisorEmail: 'mark.davidson@whitecorp.com',
-    targetEmail: 'janet.thompson@whitecorp.com',
+    character: {
+      name: '',
+      email: '',
+      role: '',
+      supervisor: '',
+      supervisor_email: '',
+      personality: ''
+    },
     tips: [
       'Social engineering often involves creating a sense of urgency or authority',
       'Try gathering information before going for the password directly'
@@ -54,7 +59,9 @@ const PhishingGame = () => {
           const data = await response.json();
           setGameState(prev => ({
             ...prev,
-            objective: data.objective
+            objective: data.objective,
+            character: data.character,
+            tips: data.tips
           }));
         }
       } catch (error) {
@@ -77,7 +84,7 @@ const PhishingGame = () => {
           from: emailContent.from,
           subject: emailContent.subject,
           body: emailContent.body,
-          target_email: gameState.targetEmail,
+          target_email: gameState.character.email,
           debug: isDebugMode
         }),
       });
@@ -138,7 +145,7 @@ const PhishingGame = () => {
           </button>
         </div>
         <GameHeader
-          targetEmail={gameState.targetEmail}
+          targetEmail={gameState.character.email}
           tips={gameState.tips}
           objective={gameState.objective}
         />

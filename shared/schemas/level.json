@@ -2,19 +2,40 @@
   "level_info": {
     "type": "object",
     "properties": {
-      "supervisorName": {
+      "objective": {
         "type": "string",
-        "description": "Name of the target's supervisor"
+        "description": "The objective of the current level"
       },
-      "supervisorEmail": {
-        "type": "string",
-        "format": "email",
-        "description": "Email of the target's supervisor"
-      },
-      "targetEmail": {
-        "type": "string",
-        "format": "email",
-        "description": "Email of the target (Janet)"
+      "character": {
+        "type": "object",
+        "description": "Detailed information about the target character",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string" },
+          "department": { "type": "string" },
+          "supervisor": { "type": "string" },
+          "supervisor_email": { "type": "string", "format": "email" },
+          "personality": { "type": "string" },
+          "known_colleagues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "role": { "type": "string" },
+                "email": { "type": "string", "format": "email" },
+                "supervisor": { 
+                  "type": ["string", "null"],
+                  "description": "The supervisor's name, or null if the person has no supervisor (e.g., CEO, Owner)"
+                },
+                "responsibilities": { "type": "string" }
+              },
+              "required": ["name", "role", "email"]
+            }
+          }
+        },
+        "required": ["name", "email", "role", "supervisor", "supervisor_email"]
       },
       "tips": {
         "type": "array",
@@ -22,13 +43,9 @@
           "type": "string"
         },
         "description": "List of tips for the level"
-      },
-      "objective": {
-        "type": "string",
-        "description": "The objective of the current level"
       }
     },
-    "required": ["supervisorName", "supervisorEmail", "targetEmail", "tips", "objective"],
+    "required": ["objective", "character", "tips"],
     "additionalProperties": false
   },
   "levels_response": {

@@ -158,9 +158,7 @@ def get_level_info(level_name):
         
     return jsonify({
         "objective": level.objective,
-        "supervisorName": level.character.get("supervisor_name", "John Smith"),
-        "supervisorEmail": level.character.get("supervisor_email", "supervisor@whitecorp.com"),
-        "targetEmail": level.character["email"],
+        "character": level.character,
         "tips": ["Be careful with sensitive information", "Pay attention to the sender's email"]
     })
 

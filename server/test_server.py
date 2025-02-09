@@ -42,7 +42,7 @@ class TestServer(unittest.TestCase):
         log_test_separator(f"Starting test: {self._testMethodName}")
         self.client = app.test_client()
         
-        # Create a proper Level instance for testing
+        # Create proper Level instances for testing
         self.janet_level = Level(
             name='janet',
             objective='Test objective',
@@ -50,14 +50,34 @@ class TestServer(unittest.TestCase):
                 'name': 'Janet Thompson',
                 'role': 'Admin Assistant',
                 'email': 'janet.thompson@whitecorp.com',
-                'supervisor_email': 'supervisor@company.com'
+                'department': 'Administration',
+                'supervisor': 'Michael Scott',
+                'supervisor_email': 'supervisor@company.com',
+                'personality': 'Friendly and helpful'
+            }
+        )
+
+        self.derek_level = Level(
+            name='derek',
+            objective='Gain access to the production database credentials from Derek.',
+            character={
+                'name': 'Derek Anderson',
+                'role': 'Database Administrator',
+                'email': 'derek.anderson@whitecorp.com',
+                'department': 'Database Management',
+                'supervisor': 'Laura Stiger',
+                'supervisor_email': 'laura.stiger@whitecorp.com',
+                'personality': 'Cautious but helpful'
             }
         )
         
         # Mock GameLevels
         self.patcher = patch('server.game_levels')
         self.mock_game_levels = self.patcher.start()
-        self.mock_game_levels.levels = {'janet': self.janet_level}
+        self.mock_game_levels.levels = {
+            'janet': self.janet_level,
+            'derek': self.derek_level
+        }
         self.mock_game_levels.get_level.side_effect = lambda x: self.mock_game_levels.levels.get(x)
 
         # Mock Janet responses
@@ -383,6 +403,32 @@ class TestServer(unittest.TestCase):
         self.assertIn("Roger Tillerman", data['response'])
         self.assertIn("System Administrator", data['response'])
         self.assertNotIn("Janet", data['response'])  # Make sure it's not using Janet's details
+
+    def test_derek_level_exists(self):
+        """Test that the Derek level exists and has correct information"""
+        logger.info('➤ Testing Derek level exists')
+        
+        # Test that Derek level is in available levels
+        response = self.client.get('/api/levels')
+        self.assertResponseValid(response, 200)
+        data = json.loads(response.data)
+        self.assertIn('derek', [level['name'] for level in data['levels']], 
+                     "Derek level should be in available levels")
+        
+        # Test Derek level info
+        response = self.client.get('/api/level/derek')
+        self.assertResponseValid(response, 200)
+        data = json.loads(response.data)
+        
+        # First verify the response matches our schema
+        self.assertSchemaValid(data, 'level_info_response')
+        
+        # Then verify Derek's specific information
+        self.assertEqual(data['character']['email'], 'derek.anderson@whitecorp.com')
+        self.assertEqual(data['character']['supervisor'], 'Laura Stiger')
+        self.assertEqual(data['character']['supervisor_email'], 'laura.stiger@whitecorp.com')
+        self.assertEqual(data['objective'], 'Gain access to the production database credentials from Derek.')
+        self.assertIn('Be careful with sensitive information', data['tips'])
 
 # Add the server directory to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
