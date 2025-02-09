@@ -9,6 +9,8 @@ on:
         required: true
       JANET_SEG_BOT_CHAT_ID:
         required: true
+      token:
+        required: true
 
 env:
   DOCKER_BUILDKIT: 1
@@ -17,11 +19,18 @@ env:
   JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
   DEBUG_MODE: true
   CI: true
+  REGISTRY: ghcr.io
+  FRONTEND_IMAGE_NAME: ${{ github.repository }}-frontend
+  BACKEND_IMAGE_NAME: ${{ github.repository }}-backend
 
 jobs:
   setup-and-test:
     timeout-minutes: 60
     runs-on: ubuntu-22.04-arm
+    permissions:
+      contents: write
+      packages: write
+    
     steps:
     - uses: actions/checkout@v3
 
@@ -173,6 +182,43 @@ jobs:
         overwrite: true  # In case of retries
         include-hidden-files: true  # To ensure we capture all report files
         retention-days: 30
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.token }}
+
+    - name: Extract metadata for images
+      id: meta
+      run: |
+        echo "FRONTEND_VERSION=$(cd frontend && npm version --json | jq -r '.version')" >> $GITHUB_ENV
+        echo "BACKEND_VERSION=$(cd server && python setup.py --version)" >> $GITHUB_ENV
+
+    - name: Tag and push frontend image
+      if: success()
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+          ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ env.FRONTEND_VERSION }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Tag and push backend image
+      if: success()
+      uses: docker/build-push-action@v4
+      with:
+        context: ./server
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
+          ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ env.BACKEND_VERSION }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Cleanup old caches
       if: github.ref == 'refs/heads/main'

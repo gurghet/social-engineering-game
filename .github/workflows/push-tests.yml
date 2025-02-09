@@ -65,13 +65,4 @@ jobs:
       OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
       JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
       JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
-
-  release-arm:
-    needs: e2e-tests
-    if: ${{ success() }}
-    permissions:
-      contents: write
-      packages: write
-    uses: ./.github/workflows/docker-publish.yml
-    secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
