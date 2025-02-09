@@ -217,6 +217,63 @@ class TestServer(unittest.TestCase):
         response = self.client.post('/api/send_email', json={})
         self.assertResponseValid(response, 400)
 
+    @patch('server.get_janet_response')
+    @patch('server.perform_security_checks')
+    def test_reject_unknown_fields(self, mock_security_checks, mock_get_response):
+        """Test that the email endpoint rejects unknown fields"""
+        logger.info('➤ Testing email endpoint with unknown fields')
+
+        # Set up mocks
+        mock_security_checks.return_value = {
+            'urgency': {'passed': True, 'name': 'Urgency Check', 'description': 'Checks for urgent or time-pressuring language'},
+            'from_supervisor': {'passed': True, 'name': 'Supervisor Check', 'description': 'Checks if the email is from your supervisor'}
+        }
+        mock_get_response.return_value = {
+            'response': 'Test response',
+            'system_prompt': 'Test system prompt',
+            'raw_input': 'Test raw input'
+        }
+
+        # Test email with unknown field
+        email_data = {
+            'from': 'test@example.com',
+            'subject': 'Test Subject',
+            'body': 'Test Content',
+            'debug': True,
+            'unknown_field': 'This should cause validation to fail'  # This field is not in the schema
+        }
+        
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            self.assertSchemaValid(email_data, 'email_request')
+
+    @patch('server.get_janet_response')
+    @patch('server.perform_security_checks')
+    def test_accept_valid_fields(self, mock_security_checks, mock_get_response):
+        """Test that the email endpoint accepts valid fields"""
+        logger.info('➤ Testing email endpoint with valid fields')
+
+        # Set up mocks
+        mock_security_checks.return_value = {
+            'urgency': {'passed': True, 'name': 'Urgency Check', 'description': 'Checks for urgent or time-pressuring language'},
+            'from_supervisor': {'passed': True, 'name': 'Supervisor Check', 'description': 'Checks if the email is from your supervisor'}
+        }
+        mock_get_response.return_value = {
+            'response': 'Test response',
+            'system_prompt': 'Test system prompt',
+            'raw_input': 'Test raw input'
+        }
+
+        # Test email with all valid fields
+        email_data = {
+            'from': 'test@example.com',
+            'subject': 'Test Subject',
+            'body': 'Test Content',
+            'debug': True  # This is a valid optional field
+        }
+        
+        # This should not raise any exception
+        self.assertSchemaValid(email_data, 'email_request')
+
     def test_security_checks(self):
         """Test that security checks are working properly"""
         logger.info('➤ Testing security checks')
@@ -260,6 +317,72 @@ class TestServer(unittest.TestCase):
                 "Please reset your password immediately!"
             )
             self.assertTrue(urgent_results['urgency']['passed'], "Urgency check should pass when urgent keywords are found")
+
+    @patch('server.get_janet_response')
+    def test_error_returns_ooo_email(self, mock_get_response):
+        """Test that when there's a backend error, we get an OOO-style email response"""
+        logger.info('➤ Testing error handling returns OOO email')
+
+        # Mock an error in the backend
+        mock_get_response.side_effect = Exception("Backend error")
+
+        # Send an email request
+        response = self.client.post('/api/send_email', json={
+            'from': 'test@example.com',
+            'subject': 'Test Subject',
+            'body': 'Test Content'
+        })
+
+        # Check response
+        self.assertResponseValid(response, 200)  # Should still return 200 as it's a handled error
+        data = json.loads(response.data)
+        
+        # Verify it's an OOO-style response
+        self.assertIn("Out of Office", data['response'])
+        self.assertIn("Janet Thompson", data['response'])
+        self.assertIn("will not be able to respond", data['response'])
+        self.assertIn("return", data['response'])
+
+    @patch('server.get_janet_response')
+    def test_error_returns_character_specific_ooo_email(self, mock_get_response):
+        """Test that when there's a backend error, we get a character-specific OOO email"""
+        logger.info('➤ Testing error handling returns character-specific OOO email')
+
+        # Create a test character in a new level
+        test_level = Level(
+            name="roger",
+            character={
+                "name": "Roger Tillerman",
+                "email": "roger.tillerman@whitecorp.com",
+                "role": "System Administrator",
+                "department": "IT Operations",
+                "supervisor": "Mark Davidson",
+                "supervisor_email": "mark.davidson@whitecorp.com"
+            },
+            objective="Test objective"
+        )
+        self.mock_game_levels.levels["roger"] = test_level
+
+        # Mock an error in the backend
+        mock_get_response.side_effect = Exception("Backend error")
+
+        # Send an email request to Roger
+        response = self.client.post('/api/send_email', json={
+            'from': 'test@example.com',
+            'subject': 'Test Subject',
+            'body': 'Test Content',
+            'target_character': 'roger'  # New field to specify which character to email
+        })
+
+        # Check response
+        self.assertResponseValid(response, 200)
+        data = json.loads(response.data)
+        
+        # Verify it's an OOO-style response with Roger's details
+        self.assertIn("Out of Office", data['response'])
+        self.assertIn("Roger Tillerman", data['response'])
+        self.assertIn("System Administrator", data['response'])
+        self.assertNotIn("Janet", data['response'])  # Make sure it's not using Janet's details
 
 # Add the server directory to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))

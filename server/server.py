@@ -9,6 +9,7 @@ from telegram_bot import send_message, format_game_message
 from datetime import datetime
 from game import get_janet_response
 from levels import game_levels
+from character import Character
 import argparse
 
 # Initialize Flask app
@@ -56,8 +57,16 @@ def send_email():
         if not data:
             return jsonify({"error": "No data provided"}), 400
 
-        # Get debug mode from request parameter
+        # Get debug mode and target character from request parameters
         debug = data.get('debug', False)
+        target_character = data.get('target_character', 'janet')
+        
+        # Get the target level and create a character instance
+        level = game_levels.get_level(target_character)
+        if not level:
+            return jsonify({"error": f"Character '{target_character}' not found"}), 404
+            
+        character = Character(level.character)
         
         # Extract email data
         from_address = data.get('from')
@@ -70,7 +79,7 @@ def send_email():
         # Format the email content
         email_content = f"""
 From: {from_address}
-To: {janet.knowledge['email']}
+To: {character.email}
 Subject: {subject}
 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -84,16 +93,29 @@ Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             'from_address': from_address,
             'subject': subject,
             'body': body
-        }, janet.knowledge['supervisor_email'])
+        }, character.supervisor_email)
         
-        # Get Janet's response with the security checks
-        response = get_janet_response(email_content, janet_security_checks)
+        try:
+            # Get Janet's response with the security checks
+            response = get_janet_response(email_content, janet_security_checks)
+        except Exception as e:
+            # Return a character-specific OOO message
+            ooo_response = {
+                'response': character.get_ooo_message(),
+                'success': False
+            }
+            if debug:
+                ooo_response['debugInfo'] = {
+                    'error': str(e),
+                    'email': email_content
+                }
+            return jsonify(ooo_response)
 
         # Send a single well-formatted message to Telegram
         game_round_message = f"""Player's Email:
 {email_content}
 
-Janet's Response:
+{character.name}'s Response:
 {response['response']}
 
 Security Checks:
