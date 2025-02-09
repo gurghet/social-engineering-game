@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: janet-backend
   namespace: janet
 spec:
   replicas: 1
@@ -17,10 +17,14 @@ spec:
       - name: backend
         image: ghcr.io/gurghet/social-engineering-game-backend:1.2.0
         imagePullPolicy: Always
+        command: ["python"]
+        args: ["server.py"]
         ports:
         - containerPort: 8080
           protocol: TCP
         env:
+        - name: PORT
+          value: "8080"
         - name: OPENAI_API_KEY_JANET
           valueFrom:
             secretKeyRef:
