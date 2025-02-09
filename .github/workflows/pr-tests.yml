@@ -11,7 +11,7 @@ on:
 
 jobs:
   server-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-arm
     env:
       OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
       JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
@@ -35,7 +35,7 @@ jobs:
           python -m unittest discover
 
   frontend-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@v3
 
@@ -58,7 +58,7 @@ jobs:
     needs: [server-tests, frontend-tests]
     uses: ./.github/workflows/e2e-setup.yml
     with:
-      platform: 'linux/amd64'  # Only test AMD64 for PRs
+      platform: 'linux/arm64'  # Use native ARM64 platform
     secrets:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
