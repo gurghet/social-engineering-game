@@ -43,40 +43,21 @@ jobs:
           echo "FRONTEND_VERSION=$(cat frontend/version.txt)" >> $GITHUB_ENV
           echo "BACKEND_VERSION=$(cat server/version.txt)" >> $GITHUB_ENV
 
-      - name: Cache Frontend Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache-frontend
-          key: ${{ runner.os }}-buildx-frontend-${{ hashFiles('frontend/package*.json', 'frontend/yarn.lock', 'frontend/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-frontend-
-          enableCrossOsArchive: true
-
-      - name: Cache Backend Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache-backend
-          key: ${{ runner.os }}-buildx-backend-${{ hashFiles('server/requirements.txt', 'server/Dockerfile') }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-backend-
-          enableCrossOsArchive: true
-
       - name: Build frontend image locally
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
           load: true
           tags: social-engineering-game-frontend:test
-          cache-from: type=local,src=/tmp/.buildx-cache-frontend
-          cache-to: type=local,dest=/tmp/.buildx-cache-frontend-new,mode=max
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:buildcache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:buildcache,mode=max
           build-args: |
             VERSION=${{ env.FRONTEND_VERSION }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
-
-      - name: Move Frontend cache
-        run: |
-          rm -rf /tmp/.buildx-cache-frontend
-          mv /tmp/.buildx-cache-frontend-new /tmp/.buildx-cache-frontend
 
       - name: Build backend image locally
         uses: docker/build-push-action@v4
@@ -84,18 +65,17 @@ jobs:
           context: ./server
           load: true
           tags: social-engineering-game-backend:test
-          cache-from: type=local,src=/tmp/.buildx-cache-backend
-          cache-to: type=local,dest=/tmp/.buildx-cache-backend-new,mode=max
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:buildcache
+          cache-to: |
+            type=gha,mode=max
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:buildcache,mode=max
           build-args: |
             VERSION=${{ env.BACKEND_VERSION }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
             JANET_SEG_BOT_TOKEN=${{ secrets.JANET_SEG_BOT_TOKEN }}
             JANET_SEG_BOT_CHAT_ID=${{ secrets.JANET_SEG_BOT_CHAT_ID }}
-
-      - name: Move Backend cache
-        run: |
-          rm -rf /tmp/.buildx-cache-backend
-          mv /tmp/.buildx-cache-backend-new /tmp/.buildx-cache-backend
 
       - name: Start containers
         run: docker compose -f docker-compose.ci.yml up -d
@@ -158,7 +138,9 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:${{ env.FRONTEND_VERSION }}
-          cache-from: type=local,src=/tmp/.buildx-cache-frontend
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE_NAME }}:buildcache
           build-args: |
             VERSION=${{ env.FRONTEND_VERSION }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
@@ -172,7 +154,9 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:${{ env.BACKEND_VERSION }}
-          cache-from: type=local,src=/tmp/.buildx-cache-backend
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE_NAME }}:buildcache
           build-args: |
             VERSION=${{ env.BACKEND_VERSION }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY_JANET }}
