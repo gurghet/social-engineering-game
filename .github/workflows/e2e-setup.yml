@@ -2,12 +2,6 @@ name: E2E Setup
 
 on:
   workflow_call:
-    inputs:
-      platform:
-        description: 'Platform to build for'
-        required: false
-        type: string
-        default: 'linux/amd64'
     secrets:
       OPENAI_API_KEY_JANET:
         required: true
@@ -23,7 +17,6 @@ env:
   JANET_SEG_BOT_CHAT_ID: ${{ secrets.JANET_SEG_BOT_CHAT_ID }}
   DEBUG_MODE: true
   CI: true
-  DOCKER_DEFAULT_PLATFORM: ${{ inputs.platform }}
 
 jobs:
   setup-and-test:

@@ -1,4 +1,4 @@
-name: Tests ARM64
+name: Tests
 
 on:
   push:
@@ -61,8 +61,6 @@ jobs:
   e2e-tests:
     needs: [server-tests, frontend-tests]
     uses: ./.github/workflows/e2e-setup.yml
-    with:
-      platform: 'linux/arm64'
     secrets:
       OPENAI_API_KEY_JANET: ${{ secrets.OPENAI_API_KEY_JANET }}
       JANET_SEG_BOT_TOKEN: ${{ secrets.JANET_SEG_BOT_TOKEN }}
@@ -75,7 +73,5 @@ jobs:
       contents: write
       packages: write
     uses: ./.github/workflows/docker-publish.yml
-    with:
-      platform: 'linux/arm64'
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}

@@ -17,8 +17,6 @@ services:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
-      platforms:
-        - linux/arm64
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`) && !PathPrefix(`/api`)"
@@ -30,8 +28,6 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-      platforms:
-        - linux/arm64
       args:
         - OPENAI_API_KEY_JANET=${OPENAI_API_KEY_JANET}
         - JANET_SEG_BOT_TOKEN=${JANET_SEG_BOT_TOKEN}
@@ -54,8 +50,6 @@ services:
     build:
       context: ./e2e
       dockerfile: Dockerfile
-      platforms:
-        - linux/amd64
     depends_on:
       - frontend
       - server
