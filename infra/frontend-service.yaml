@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: janet-frontend
+  name: frontend
   namespace: janet
 spec:
   selector:
