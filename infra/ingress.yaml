@@ -1,0 +1,43 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: janet-ingress
+  namespace: janet
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web, websecure
+    traefik.ingress.kubernetes.io/router.middlewares: janet-janet-https-redirect@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  tls:
+    - hosts:
+        - janet.passaglia.it
+      secretName: janet-tls
+  rules:
+    - host: janet.passaglia.it
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: janet-backend
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: janet-frontend
+                port:
+                  number: 80
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: janet-https-redirect
+  namespace: janet
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true

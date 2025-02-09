@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: janet-backend
+  namespace: janet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: janet-backend
+  template:
+    metadata:
+      labels:
+        app: janet-backend
+    spec:
+      containers:
+      - name: backend
+        image: ghcr.io/gurghet/social-engineering-game-backend:1.2.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: OPENAI_API_KEY_JANET
+          valueFrom:
+            secretKeyRef:
+              name: janet-secrets
+              key: OPENAI_API_KEY_JANET
+        - name: JANET_SEG_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: janet-secrets
+              key: JANET_SEG_BOT_TOKEN
+        - name: JANET_SEG_BOT_CHAT_ID
+          valueFrom:
+            secretKeyRef:
+              name: janet-secrets
+              key: JANET_SEG_BOT_CHAT_ID
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          successThreshold: 1
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1

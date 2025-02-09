@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: janet-frontend
+  namespace: janet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: janet-frontend
+  template:
+    metadata:
+      labels:
+        app: janet-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: ghcr.io/gurghet/social-engineering-game-frontend:1.2.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+        env:
+        - name: VITE_API_URL
+          value: "/api"
