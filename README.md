@@ -28,6 +28,12 @@ docker compose up
 docker compose -f docker-compose.ci.yml up
 ```
 
+### Using Development Script
+```bash
+# Start both backend and frontend in development mode
+./run_dev.sh
+```
+
 ### Manual Setup
 ```bash
 # Backend
@@ -69,7 +75,11 @@ BACKEND_PORT=8082 npx playwright test
 - [x] write frontend test to capture the schema of request response
 - [x] write backend test to capture the schema of request response
 - [x] try to make the schemas strict (no unknown fields are tolerated)
-- [ ] Add second level called Derek (from the name of the character we'll send emails to)
+- [ ] Add to field (greyed out field) to make clear who the target is
+- [ ] Add a text field the user can enter the password to in case they get it 
+      piecewise and the automated win detection fails to trigger 
+      (since it's a zero-shot challenge but the player can gather intel 
+      in more than one match)
 - [ ] Add CAPTCHA to the game
 - [ ] Add more background story
 - [ ] Display progress (intel gathered)
